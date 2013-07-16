@@ -1,0 +1,24 @@
+<style>
+ .allnews_item {margin: 5px; border: 2px solid black; padding-left: 3px; padding-right: 3px; padding-top: 5px; madding-bottom: 5px;}
+ .allnews_body {margin-left: 20px; margin-right: 50px;}
+ .allnews_container {padding-top: 20px;}
+ .allnews_heading {font-size: 18px; font-weight: bold;}
+ .allnews_a {text-decoration: none; background-color: #e2a062; color: black;}
+ .allnews_a:hover {text-decoration: none; background-color: #210462; color: white;}
+ .allnews_date {font-weight: bold;}
+</style>
+
+<div class="allnews_heading">#title#</div>
+
+<div class="allnews_container">
+    #BEGIN:items#
+	<div class="allnews_item">
+	 <span class="allnews_date">#date#</span>
+
+	 <a class="allnews_a" href="#url#"><span>#title#</span></a>
+
+
+	 <div class="allnews_body">#body#</div>
+	</div>
+    #END:items#
+</div>

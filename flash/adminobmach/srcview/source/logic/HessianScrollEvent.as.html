@@ -1,0 +1,79 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>HessianScrollEvent.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> logic
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> flash.events.Event;
+
+    <span class="asDoc">/**
+     * Класс событие служит для извещения заинтересованных слушателей об том что набор данных меняет внутренее состояние
+     * За конкретный тип смены состояния отвечает значение stateKind
+     */</span> 
+    <span class="asReserved">public</span> <span class="asClass">class</span> HessianScrollEvent <span class="asReserved">extends</span> Event
+    <span class="asBracket">{</span>
+
+        <span class="asDoc">/** 
+         * обработана команда перехода в режим редактирования
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> DATASET_TRIGGERED_EDIT <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;edit&quot;</span>;        
+        <span class="asDoc">/** 
+         * обработана команда перехода в добавления новой записи
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> DATASET_TRIGGERED_APPEND <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;append&quot;</span>;
+        <span class="asDoc">/** 
+         * обработана команда перехода в режим сохранения изменений
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> DATASET_TRIGGERED_POST <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;post&quot;</span>;
+        <span class="asDoc">/** 
+         * обработана команда перехода в режим удаления записи
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> DATASET_TRIGGERED_DELETE <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;delete&quot;</span>;
+        <span class="asDoc">/** 
+         * обработана команда перехода в режим отмены редактирования
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> DATASET_TRIGGERED_CANCEL <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;cancel&quot;</span>;
+        <span class="asDoc">/** 
+         *  было выполнено произвольное перемещение указателя на текущую запись
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> DATASET_TRIGGERED_SCROLL <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;scroll&quot;</span>;
+        <span class="asDoc">/**
+         *  было выполнено редактирование одного из полей
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> DATASET_TRIGGERED_MODIFY <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;modify&quot;</span>;        
+        
+        
+        
+        <span class="asDoc">/** 
+         * обработана команда перехода к первой записи
+         */</span> 
+        <span class="asComment">//public static var DATASET_TRIGGERED_FIRST : String = &quot;move_to_first&quot;;
+</span>        <span class="asDoc">/** 
+         * обработана команда перехода к следующей записи
+         */</span> 
+        <span class="asComment">//    public static var DATASET_TRIGGERED_NEXT : String = &quot;move_to_next&quot;;
+</span>        <span class="asDoc">/** 
+         * обработана команда перехода к предыдущей записи
+         */</span> 
+        <span class="asComment">// public static var DATASET_TRIGGERED_PREV : String = &quot;move_to_prev&quot;;
+</span>        <span class="asDoc">/** 
+         * обработана команда перехода к последней записи в наборе
+         */</span> 
+        <span class="asComment">// public static var DATASET_TRIGGERED_LAST : String = &quot;move_to_last&quot;;
+</span>                
+        
+        
+        <span class="asReserved">public</span> <span class="asVar">var</span> stateKind <span class="asOperator">:</span> String;
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> HessianScrollEvent <span class="asBracket">(</span>stateKind <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">super</span> <span class="asBracket">(</span>stateKind<span class="asBracket">)</span>;
+            <span class="asReserved">this</span>.stateKind  <span class="asOperator">=</span> stateKind;
+        <span class="asBracket">}</span>
+    <span class="asBracket">}</span>
+<span class="asBracket">}</span></pre></body>
+</html>

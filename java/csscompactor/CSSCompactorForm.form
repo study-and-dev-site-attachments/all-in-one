@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="CSSCompactorForm">
+  <grid id="27dc6" binding="paneroot" layout-manager="FormLayout">
+    <rowspec value="center:40px:noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:d:noGrow"/>
+    <rowspec value="center:p:noGrow"/>
+    <rowspec value="top:d:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:d:noGrow"/>
+    <rowspec value="center:24px:noGrow"/>
+    <rowspec value="top:d:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:d:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <rowspec value="top:4dlu:noGrow"/>
+    <rowspec value="center:24px:noGrow"/>
+    <rowspec value="top:d:noGrow"/>
+    <rowspec value="center:max(m;4px):noGrow"/>
+    <rowspec value="top:d:noGrow"/>
+    <rowspec value="center:max(d;4px):noGrow"/>
+    <colspec value="fill:8dlu:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="fill:187px:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:26dlu:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:d:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:12dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:200px:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="left:30dlu:noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:4dlu:noGrow"/>
+    <colspec value="fill:max(d;4px):noGrow"/>
+    <colspec value="left:27dlu:noGrow"/>
+    <colspec value="fill:m:noGrow"/>
+    <constraints>
+      <xy x="20" y="19" width="842" height="553"/>
+    </constraints>
+    <properties/>
+    <border type="none"/>
+    <children>
+      <component id="34471" class="javax.swing.JTextField" binding="txtOnlyFileForProcess">
+        <constraints>
+          <grid row="4" column="12" row-span="1" col-span="25" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="fd506" class="javax.swing.JRadioButton" binding="radio_onlySelectedFile">
+        <constraints>
+          <grid row="4" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Only Selected File"/>
+        </properties>
+      </component>
+      <component id="45c77" class="javax.swing.JRadioButton" binding="radio_entireDir">
+        <constraints>
+          <grid row="6" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="false"/>
+          <text value="Entire Catalog"/>
+        </properties>
+      </component>
+      <component id="39c98" class="javax.swing.JButton" binding="btnSelectFile_Input">
+        <constraints>
+          <grid row="4" column="40" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="..."/>
+        </properties>
+      </component>
+      <component id="53eab" class="javax.swing.JProgressBar" binding="progressBar_Process">
+        <constraints>
+          <grid row="10" column="11" row-span="1" col-span="26" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties>
+          <stringPainted value="true"/>
+        </properties>
+      </component>
+      <component id="3b7aa" class="javax.swing.JButton" binding="btnSelectCatalog_Input">
+        <constraints>
+          <grid row="6" column="40" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="..."/>
+        </properties>
+      </component>
+      <component id="10890" class="javax.swing.JTextField" binding="txtCatalogForProcess">
+        <constraints>
+          <grid row="6" column="12" row-span="1" col-span="25" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="42edf" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="10" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties>
+          <text value="Progress"/>
+        </properties>
+      </component>
+      <grid id="a1165" layout-manager="FormLayout">
+        <constraints>
+          <grid row="26" column="33" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children/>
+      </grid>
+      <component id="31aa2" class="javax.swing.JButton" binding="btnGo">
+        <constraints>
+          <grid row="10" column="40" row-span="1" col-span="4" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <enabled value="false"/>
+          <text value="Start Process"/>
+        </properties>
+      </component>
+      <component id="808b" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="12" column="9" row-span="1" col-span="36" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties>
+          <font style="1"/>
+          <text value="Output Destination"/>
+        </properties>
+      </component>
+      <component id="33b17" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="18" column="9" row-span="1" col-span="36" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties>
+          <font style="1"/>
+          <text value="Compress Options"/>
+        </properties>
+      </component>
+      <component id="2a21e" class="javax.swing.JLabel" binding="labSaveProcessedFileAs">
+        <constraints>
+          <grid row="14" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <enabled value="true"/>
+          <text value="Save Processed File As .."/>
+        </properties>
+      </component>
+      <component id="e2905" class="javax.swing.JLabel" binding="labSaveProcessedCatalogAs">
+        <constraints>
+          <grid row="16" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="Put All Processed Files Into Catalog"/>
+        </properties>
+      </component>
+      <component id="edc04" class="javax.swing.JTextField" binding="txtSaveResultFileAs">
+        <constraints>
+          <grid row="14" column="12" row-span="1" col-span="25" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="a6510" class="javax.swing.JTextField" binding="txtPutResultFilesInto">
+        <constraints>
+          <grid row="16" column="12" row-span="1" col-span="25" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="72e85" class="javax.swing.JButton" binding="btnSelectFile_Output">
+        <constraints>
+          <grid row="14" column="40" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="..."/>
+        </properties>
+      </component>
+      <component id="5415" class="javax.swing.JButton" binding="btnSelectCatalog_Output">
+        <constraints>
+          <grid row="16" column="40" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="..."/>
+        </properties>
+      </component>
+      <component id="ff7a5" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="22" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <font style="1"/>
+          <text value="Spaces and tabs"/>
+        </properties>
+      </component>
+      <component id="a692c" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="36" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <font style="1"/>
+          <text value="New lines handling"/>
+        </properties>
+      </component>
+      <component id="f249f" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="2" column="9" row-span="1" col-span="35" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties>
+          <font style="1"/>
+          <text value="Input File(s)"/>
+        </properties>
+      </component>
+      <component id="86e58" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="0" column="9" row-span="1" col-span="35" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties>
+          <font size="12" style="1"/>
+          <text value="CSS Compressor by black zorro (black-zorro.com, black-zorro.jino-net.ru)"/>
+        </properties>
+      </component>
+      <component id="76f9e" class="javax.swing.JRadioButton" binding="leaveLinesAsTheyRadioButton" default-binding="true">
+        <constraints>
+          <grid row="38" column="9" row-span="1" col-span="8" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="Leave lines as they are"/>
+        </properties>
+      </component>
+      <component id="bb1f0" class="javax.swing.JRadioButton" binding="replaceMultipleEmptyLinesRadioButton" default-binding="true">
+        <constraints>
+          <grid row="40" column="9" row-span="1" col-span="18" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Replace multiple empty lines with just one empty line"/>
+        </properties>
+      </component>
+      <component id="fbeed" class="javax.swing.JRadioButton" binding="removeAllNewlinesRadioButton" default-binding="true">
+        <constraints>
+          <grid row="42" column="9" row-span="1" col-span="8" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="Remove all newlines"/>
+        </properties>
+      </component>
+      <component id="2deab" class="javax.swing.JCheckBox" binding="removeSpaceAroundCharsCheckBox" default-binding="true">
+        <constraints>
+          <grid row="28" column="9" row-span="1" col-span="18" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Remove space around chars ;:{},"/>
+        </properties>
+      </component>
+      <component id="6f1e1" class="javax.swing.JCheckBox" binding="leaveSpaceBetweenSelectorsCheckBox" default-binding="true">
+        <constraints>
+          <grid row="30" column="9" row-span="1" col-span="19" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Leave space between selectors"/>
+        </properties>
+      </component>
+      <component id="8d29c" class="javax.swing.JCheckBox" binding="removeTabsCheckBox" default-binding="true">
+        <constraints>
+          <grid row="34" column="9" row-span="1" col-span="8" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Remove tabs"/>
+        </properties>
+      </component>
+      <component id="4109" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="22" column="33" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <font style="1"/>
+          <text value="Comment handling"/>
+        </properties>
+      </component>
+      <component id="1295c" class="javax.swing.JRadioButton" binding="stripCommentsAtLeastRadioButton" default-binding="true">
+        <constraints>
+          <grid row="30" column="33" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Strip comments at least"/>
+        </properties>
+      </component>
+      <component id="14b1d" class="javax.swing.JTextField" binding="a4TextField" default-binding="true">
+        <constraints>
+          <grid row="30" column="34" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+          <forms defaultalign-horz="false"/>
+        </constraints>
+        <properties>
+          <text value="4"/>
+        </properties>
+      </component>
+      <component id="396ef" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="30" column="40" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="chars long"/>
+        </properties>
+      </component>
+      <component id="7e141" class="javax.swing.JCheckBox" binding="compressColorCodesWhereCheckBox" default-binding="true">
+        <constraints>
+          <grid row="38" column="33" row-span="1" col-span="8" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Compress color codes where possible"/>
+        </properties>
+      </component>
+      <component id="70c63" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="36" column="33" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <font style="1"/>
+          <text value="Other options"/>
+        </properties>
+      </component>
+      <component id="6e39f" class="javax.swing.JCheckBox" binding="removeUnnecessarySemiColonsCheckBox" default-binding="true">
+        <constraints>
+          <grid row="40" column="33" row-span="1" col-span="8" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Remove unnecessary semi-colons"/>
+          <visible value="false"/>
+        </properties>
+      </component>
+      <component id="3782c" class="javax.swing.JCheckBox" binding="oneCommandPerLineCheckBox" default-binding="true">
+        <constraints>
+          <grid row="42" column="33" row-span="1" col-span="8" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="One command per line"/>
+        </properties>
+      </component>
+      <component id="81e00" class="javax.swing.JRadioButton" binding="donTStripAnyRadioButton" default-binding="true">
+        <constraints>
+          <grid row="24" column="33" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="Don't strip any comments"/>
+        </properties>
+      </component>
+      <component id="37e95" class="javax.swing.JRadioButton" binding="stripALLCommentsRadioButton" default-binding="true">
+        <constraints>
+          <grid row="28" column="33" row-span="1" col-span="8" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="Strip ALL comments"/>
+        </properties>
+      </component>
+      <component id="474c0" class="javax.swing.JCheckBox" binding="replaceMultipleSpacesWithCheckBox" default-binding="true">
+        <constraints>
+          <grid row="24" column="9" row-span="1" col-span="13" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Replace multiple spaces with just one space"/>
+        </properties>
+      </component>
+      <component id="c2946" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="8" column="9" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <labelFor value="33b2"/>
+          <text value="input character set"/>
+        </properties>
+      </component>
+      <component id="33b2" class="javax.swing.JComboBox" binding="combo_input_charset">
+        <constraints>
+          <grid row="8" column="11" row-span="1" col-span="18" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="a1830" class="javax.swing.JLabel">
+        <constraints>
+          <grid row="8" column="33" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <labelFor value="8a485"/>
+          <text value="output charset"/>
+        </properties>
+      </component>
+      <component id="8a485" class="javax.swing.JComboBox" binding="combo_output_charset">
+        <constraints>
+          <grid row="8" column="34" row-span="1" col-span="7" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="61006" class="javax.swing.JCheckBox" binding="leaveSpaceBetweenPropertiesCheckBox" default-binding="true">
+        <constraints>
+          <grid row="32" column="9" row-span="1" col-span="18" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <selected value="true"/>
+          <text value="Leave space between properties"/>
+        </properties>
+      </component>
+      <component id="f32f5" class="javax.swing.JCheckBox" binding="skipCompressOnlyChangeCheckBox" default-binding="true">
+        <constraints>
+          <grid row="18" column="8" row-span="1" col-span="17" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <forms/>
+        </constraints>
+        <properties>
+          <text value="Skip Compress (only change charset)"/>
+        </properties>
+      </component>
+    </children>
+  </grid>
+  <buttonGroups>
+    <group name="buttonGroup_WhatProcess">
+      <member id="fd506"/>
+      <member id="45c77"/>
+    </group>
+    <group name="buttonGroup_CommentHandling">
+      <member id="81e00"/>
+      <member id="37e95"/>
+      <member id="1295c"/>
+    </group>
+    <group name="buttonGroup_NewLinesHandling">
+      <member id="76f9e"/>
+      <member id="bb1f0"/>
+      <member id="fbeed"/>
+    </group>
+  </buttonGroups>
+</form>

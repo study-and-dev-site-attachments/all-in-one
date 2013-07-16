@@ -1,0 +1,72 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>HessianDataSetHeader.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> logic
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> mx.collections.ArrayCollection;
+    <span class="asDoc">/**
+     * Класс является частью клиентского представления загруженных с сервера данных
+     * Представляет собой метаинформацию об выборке и состоит из списка объектов Колонок 
+     * представленных с помощью класса HessianDataSetColumn
+     */</span> 
+    <span class="asReserved">public</span> <span class="asClass">class</span> HessianDataSetHeader
+    <span class="asBracket">{</span>
+        <span class="asDoc">/**
+         * Список объектов колонок, каждый из которых представлен экземпляром класса HessianDataSetColumn
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> columns <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection<span class="asBracket">()</span>;
+        <span class="asDoc">/**
+         * Ассоциативный массив хранящий правила отображения номера колонки на ее имя. 
+         * Используется для правильного разбора данных возвращенных от сервера
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> map_columns <span class="asOperator">:</span> Object <span class="asOperator">=</span> <span class="asReserved">null</span>;
+
+        <span class="asDoc">/**
+         * Конструктор класса служит для анализа переданного ему объекта - полученному от сервера hessian
+         * и его последующего анализа
+         */</span>         
+        <span class="asReserved">public</span> <span class="asFunction">function</span> HessianDataSetHeader <span class="asBracket">(</span>obj<span class="asOperator">:</span> Object<span class="asBracket">){</span>
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0;i <span class="asOperator">&lt;</span> obj<span class="asBracket">[</span><span class="asString">&apos;columns&apos;</span><span class="asBracket">]</span>.length;i<span class="asOperator">++</span><span class="asBracket">)</span>
+                <span class="asReserved">this</span>.columns.addItem<span class="asBracket">(</span><span class="asReserved">new</span> HessianDataSetColumn<span class="asBracket">(</span>obj<span class="asBracket">[</span><span class="asString">&apos;columns&apos;</span><span class="asBracket">][</span>i<span class="asBracket">]))</span>;
+            <span class="asReserved">this</span>.map_columns <span class="asOperator">=</span> obj<span class="asBracket">[</span><span class="asString">&apos;map_columns&apos;</span><span class="asBracket">]</span>;                
+        <span class="asBracket">}</span>
+
+        <span class="asDoc">/**
+         * Возвращает имя колонки для указанного номера
+         * @param idx Номер колонки
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getColumnName <span class="asBracket">(</span>idx<span class="asOperator">:</span> int<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asReserved">return</span> <span class="asBracket">(</span>columns<span class="asBracket">[</span>idx<span class="asBracket">]</span> <span class="asReserved">as</span> HessianDataSetColumn<span class="asBracket">)</span>.columnName;
+        <span class="asBracket">}</span>
+
+        <span class="asDoc">/**
+         * Функция наосновании имени поля возвращает его порядковый номер. Является обратной к getColumnName
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getColumnPosition <span class="asBracket">(</span>name<span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>int<span class="asBracket">{</span>
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0;i <span class="asOperator">&lt;</span> columns.length;i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span> <span class="asBracket">(</span>columns<span class="asBracket">[</span>i<span class="asBracket">]</span> <span class="asReserved">as</span> HessianDataSetColumn<span class="asBracket">)</span>.columnName <span class="asOperator">==</span> name<span class="asBracket">)</span>
+                    <span class="asReserved">return</span> i;
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> <span class="asOperator">-</span>1;
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asDoc">/**
+         * Создает новую пустую запись в виде массива ключами которого являеются все имена полей выборки
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> createEmptyRecord <span class="asBracket">()</span><span class="asOperator">:</span>Array<span class="asBracket">{</span>
+            <span class="asVar">var</span> nrow <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0;i <span class="asOperator">&lt;</span> columns.length;i<span class="asOperator">++</span><span class="asBracket">){</span>
+                nrow <span class="asBracket">[(</span>columns<span class="asBracket">[</span>i<span class="asBracket">]</span> <span class="asReserved">as</span> HessianDataSetColumn<span class="asBracket">)</span>.columnName<span class="asBracket">]</span> <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> nrow;
+        <span class="asBracket">}</span>
+    <span class="asBracket">}</span>
+<span class="asBracket">}</span></pre></body>
+</html>

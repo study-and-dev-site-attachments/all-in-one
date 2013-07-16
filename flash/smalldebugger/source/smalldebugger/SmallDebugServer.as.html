@@ -1,0 +1,175 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>SmallDebugServer.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asDoc">/**
+ * SmallDebugServer (http://black-zorro.com/mediawiki/proj_smallflexdebugger)
+ * @author Nikolai Gishkevich aka black zorro
+*/</span>
+<span class="asPackage">package</span> smalldebugger
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> mx.collections.ArrayCollection;
+    <span class="asReserved">import</span> flash.net.LocalConnection;
+    <span class="asReserved">import</span> flash.utils.getTimer;
+    <span class="asReserved">import</span> mx.controls.Alert;
+    <span class="asDoc">/**
+     * Класс сервер-слушатель сообщений
+     */</span> 
+    <span class="asReserved">public</span> <span class="asClass">class</span> SmallDebugServer
+    <span class="asBracket">{</span>
+        <span class="asDoc">/**
+         * Список пришедших сообщений в виде коллекции объектов SmallDebugRecord
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> debugList <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;
+        
+        <span class="asDoc">/**
+         * Счетчик сообщений всех видов
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> qty_all <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+
+        <span class="asDoc">/**
+         * Счетчик сообщений вида &quot;warn&quot;
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> qty_warn <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+
+        <span class="asDoc">/**
+         * Счетчик сообщений вида &quot;error&quot;
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> qty_error <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+
+        <span class="asDoc">/**
+         * Счетчик сообщений вида &quot;fatal&quot;
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> qty_fatal <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+
+        <span class="asDoc">/**
+         * Счетчик сообщений вида &quot;info&quot;
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> qty_info <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+
+        <span class="asDoc">/**
+         * Счетчик сообщений вида &quot;debug&quot;
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> qty_debug <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+        
+        <span class="asDoc">/**
+         * Признак того, стоит ли при фильтрации сообщений показывать те из них которые имеют тип &quot;warn&quot;
+           */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> filterShow_warn <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">true</span>;
+        <span class="asDoc">/**
+         * Признак того, стоит ли при фильтрации сообщений показывать те из них которые имеют тип &quot;error&quot;
+           */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> filterShow_error <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">true</span>;
+        <span class="asDoc">/**
+         * Признак того, стоит ли при фильтрации сообщений показывать те из них которые имеют тип &quot;fatal&quot;
+           */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> filterShow_fatal <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">true</span>;
+        <span class="asDoc">/**
+         * Признак того, стоит ли при фильтрации сообщений показывать те из них которые имеют тип &quot;info&quot;
+           */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> filterShow_info <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">true</span>;                        
+        <span class="asDoc">/**
+         * Признак того, стоит ли при фильтрации сообщений показывать те из них которые имеют тип &quot;debug&quot;
+           */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> filterShow_debug <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">true</span>;                                
+        
+        <span class="asDoc">/**
+         * время когда пришло первое сообщение
+        */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> loc_startTimer <span class="asOperator">:</span> uint;
+        
+        <span class="asDoc">/**
+         * Вспомогательный счетчик количества пришедших сообщений
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> loc_currentDebugMsgNum <span class="asOperator">:</span> uint <span class="asOperator">=</span> 0;                
+        <span class="asDoc">/**
+         * Конструктор, выполняет привязку к коллекции сообщений функции фильтрации на основании указанных выше флагов
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> SmallDebugServer <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                debugList.filterFunction  <span class="asOperator">=</span> onFilterItemFoo;
+        <span class="asBracket">}</span><span class="asComment">// end of -- SmallDebugServer --
+</span>        
+        <span class="asDoc">/**
+         * Функция имитатор - заполняет журнал тестовыми сообщениями
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> imitate <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> rakind <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asBracket">[</span><span class="asString">&quot;warn&quot;</span>, <span class="asString">&quot;fatal&quot;</span>, <span class="asString">&quot;info&quot;</span>, <span class="asString">&quot;error&quot;</span>, <span class="asString">&quot;debug&quot;</span><span class="asBracket">]</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> 1000; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                debug <span class="asBracket">(</span><span class="asReserved">new</span> SmallDebugRecord <span class="asBracket">(</span><span class="asReserved">this</span>, 
+                    rakind<span class="asBracket">[</span>int<span class="asBracket">(</span>Math.random<span class="asBracket">()</span><span class="asOperator">*</span>4<span class="asBracket">)]</span>, <span class="asString">&quot;msg_&quot;</span> <span class="asOperator">+</span> i, <span class="asString">&quot;func_&quot;</span> <span class="asOperator">+</span> <span class="asBracket">(</span>i<span class="asOperator">%</span>10<span class="asBracket">)</span>, <span class="asString">&quot;class_&quot;</span> <span class="asOperator">+</span> <span class="asBracket">(</span>i<span class="asOperator">%</span>5<span class="asBracket">)</span>, <span class="asBracket">[]</span>, <span class="asOperator">&lt;</span>param name<span class="asOperator">=</span><span class="asString">&quot;foo&quot;</span> <span class="asOperator">/&gt;</span><span class="asBracket">)</span>
+                <span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- imitate --
+</span>
+        
+        <span class="asDoc">/**
+         * Функция обработчик события &quot;пришло сообщение&quot;
+         * @param rec - ссылка на объект описывающий сообщение
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> debug <span class="asBracket">(</span>rec <span class="asOperator">:</span> SmallDebugRecord<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            debugList.addItem<span class="asBracket">(</span>rec<span class="asBracket">)</span>;            
+            loc_currentDebugMsgNum<span class="asOperator">++</span>;
+            qty_all<span class="asOperator">++</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rec.a_kind <span class="asOperator">==</span> <span class="asString">&apos;warn&apos;</span><span class="asBracket">)</span> qty_warn<span class="asOperator">++</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rec.a_kind <span class="asOperator">==</span> <span class="asString">&apos;error&apos;</span><span class="asBracket">)</span> qty_error<span class="asOperator">++</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rec.a_kind <span class="asOperator">==</span> <span class="asString">&apos;fatal&apos;</span><span class="asBracket">)</span> qty_fatal<span class="asOperator">++</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rec.a_kind <span class="asOperator">==</span> <span class="asString">&apos;info&apos;</span><span class="asBracket">)</span> qty_info<span class="asOperator">++</span>;                                    
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rec.a_kind <span class="asOperator">==</span> <span class="asString">&apos;debug&apos;</span><span class="asBracket">)</span> qty_debug<span class="asOperator">++</span>;                                                
+        <span class="asBracket">}</span><span class="asComment">// end of -- debug --
+</span>        
+        <span class="asDoc">/**
+         * Функция вызывается когда приходит первое сообщение к данному серверу в пуле
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> startDebug <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            loc_startTimer <span class="asOperator">=</span> getTimer<span class="asBracket">()</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- startDebug --
+</span>
+        <span class="asDoc">/**
+         * фукнция фильтрации - определяет то, какие записи из коллекции debugList следует показывать
+         */</span> 
+        <span class="asReserved">private</span> <span class="asFunction">function</span> onFilterItemFoo <span class="asBracket">(</span>obj <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+            <span class="asVar">var</span> robj <span class="asOperator">:</span> SmallDebugRecord <span class="asOperator">=</span> obj <span class="asReserved">as</span> SmallDebugRecord;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>filterShow_warn <span class="asOperator">&amp;&amp;</span> robj.a_kind <span class="asOperator">==</span> <span class="asString">&apos;warn&apos;</span><span class="asBracket">)</span>
+                <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>filterShow_fatal <span class="asOperator">&amp;&amp;</span> robj.a_kind <span class="asOperator">==</span> <span class="asString">&apos;fatal&apos;</span><span class="asBracket">)</span>
+                <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>filterShow_error <span class="asOperator">&amp;&amp;</span> robj.a_kind <span class="asOperator">==</span> <span class="asString">&apos;error&apos;</span><span class="asBracket">)</span>
+                <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>filterShow_info <span class="asOperator">&amp;&amp;</span> robj.a_kind <span class="asOperator">==</span> <span class="asString">&apos;info&apos;</span><span class="asBracket">)</span>
+                <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>filterShow_debug <span class="asOperator">&amp;&amp;</span> robj.a_kind <span class="asOperator">==</span> <span class="asString">&apos;debug&apos;</span><span class="asBracket">)</span>
+                <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asReserved">return</span> <span class="asReserved">false</span>;    
+        <span class="asBracket">}</span><span class="asComment">// end of -- onFilterItemFoo --
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для возврата по указанному номеру и типу информации сведений об записи (простые поля)
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getParamTree <span class="asBracket">(</span>rowIdx<span class="asOperator">:</span> int, a_name<span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>Array<span class="asBracket">{</span>
+            <span class="asVar">var</span> row <span class="asOperator">:</span> SmallDebugRecord <span class="asOperator">=</span> debugList.getItemAt<span class="asBracket">(</span>rowIdx<span class="asBracket">)</span> <span class="asReserved">as</span> SmallDebugRecord;
+            <span class="asReserved">return</span> row.a_array;
+        <span class="asBracket">}</span><span class="asComment">// end of -- getParamTree --
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для возврата по указанному номеру и типу информации сведений об записи (stacktrace)
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getParam <span class="asBracket">(</span>rowIdx<span class="asOperator">:</span> int, a_name <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asVar">var</span> row <span class="asOperator">:</span> SmallDebugRecord <span class="asOperator">=</span> debugList.getItemAt<span class="asBracket">(</span>rowIdx<span class="asBracket">)</span> <span class="asReserved">as</span> SmallDebugRecord;
+            <span class="asReserved">return</span> row<span class="asBracket">[</span>a_name<span class="asBracket">]</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- getParam --
+</span>    <span class="asBracket">}</span><span class="asComment">// end of CLASS
+</span>    
+<span class="asBracket">}</span>    <span class="asComment">// -- end of PACKAGE
+</span></pre></body>
+</html>

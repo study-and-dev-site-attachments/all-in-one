@@ -1,0 +1,58 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>HessianDataSetColumn.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> logic
+<span class="asBracket">{</span>
+    <span class="asDoc">/**
+     * Класс являющийся частью пользовательского представления загруженных с сервера данных
+     * Хранит сведения об отдельной колонке результата
+     */</span> 
+    <span class="asReserved">public</span> <span class="asClass">class</span> HessianDataSetColumn
+    <span class="asBracket">{</span>
+        <span class="asDoc">/**
+         * Имя поля
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> columnName <span class="asOperator">:</span> String;
+        <span class="asDoc">/**
+         * Имя таблицы откуда были загружены данные
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> tableName <span class="asOperator">:</span> String;
+        <span class="asDoc">/**
+         * Тип поля
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> columnType <span class="asOperator">:</span> String;
+        <span class="asDoc">/**
+        * Размер поля
+        */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> columnSize <span class="asOperator">:</span> int;
+        <span class="asDoc">/**
+         * Признак того является ли данное поле первичным ключом записи
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> isPrimaryKey <span class="asOperator">:</span> Boolean;
+        
+        <span class="asDoc">/**
+         * Признак того является ли данное поле булева типа данных
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> isBoolean <span class="asOperator">:</span> Boolean;
+        
+        
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> HessianDataSetColumn <span class="asBracket">(</span>column<span class="asOperator">:</span>Object<span class="asBracket">){</span>
+            columnName <span class="asOperator">=</span> column<span class="asBracket">[</span><span class="asString">&quot;columnName&quot;</span><span class="asBracket">]</span>;
+            tableName  <span class="asOperator">=</span> column<span class="asBracket">[</span><span class="asString">&quot;tableName&quot;</span><span class="asBracket">]</span>;
+            columnType <span class="asOperator">=</span> column<span class="asBracket">[</span><span class="asString">&quot;columnType&quot;</span><span class="asBracket">]</span>;
+            columnSize <span class="asOperator">=</span> column<span class="asBracket">[</span><span class="asString">&quot;columnSize&quot;</span><span class="asBracket">]</span>;
+            isPrimaryKey <span class="asOperator">=</span> column<span class="asBracket">[</span><span class="asString">&quot;isPrimaryKey&quot;</span><span class="asBracket">]</span>;
+            isBoolean <span class="asOperator">=</span> column<span class="asBracket">[</span><span class="asString">&quot;isBoolean&quot;</span><span class="asBracket">]</span>;
+            
+        <span class="asBracket">}</span>
+
+    <span class="asBracket">}</span>
+<span class="asBracket">}</span></pre></body>
+</html>

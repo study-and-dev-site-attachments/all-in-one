@@ -1,0 +1,156 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>test001.mxml</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:Application</span> xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; 
+    layout=&quot;<span class="mxmlString">absolute</span>&quot;
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    creationComplete=&quot;initBoo<span class="asBracket">()</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asReserved">import</span> mx.collections.ArrayCollection;
+            <span class="asReserved">import</span> test.BooEvent;
+            <span class="asReserved">import</span> mx.controls.Alert;
+            
+            <span class="asBracket">[</span><span class="asMetadata">Event</span><span class="asBracket">(</span>name<span class="asOperator">=</span><span class="asString">&quot;BooEvent&quot;</span>, type<span class="asOperator">=</span><span class="asString">&quot;test.BooEvent&quot;</span><span class="asBracket">)]</span>        
+        
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+            <span class="asReserved">public</span> <span class="asVar">var</span> arr <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asBracket">[</span>
+                <span class="asBracket">{</span>fio<span class="asOperator">:</span> <span class="asString">&quot;bill&quot;</span>, sex<span class="asOperator">:</span> <span class="asString">&quot;male&quot;</span>, be <span class="asOperator">:</span> <span class="asBracket">{</span>day <span class="asOperator">:</span> 12, month<span class="asOperator">:</span> 11, year <span class="asOperator">:</span> 2008<span class="asBracket">}}</span>,
+                <span class="asBracket">{</span>fio<span class="asOperator">:</span> <span class="asString">&quot;mary&quot;</span>, sex<span class="asOperator">:</span> <span class="asString">&quot;female&quot;</span>, te<span class="asOperator">:</span> <span class="asReserved">null</span>, ta <span class="asOperator">:</span> <span class="asBracket">{</span>x<span class="asOperator">:</span> <span class="asReserved">null</span>, y <span class="asOperator">:</span> <span class="asString">&quot;abba&quot;</span><span class="asBracket">}}</span>,                
+            <span class="asBracket">]</span>;
+            
+            
+            <span class="asReserved">public</span> <span class="asVar">var</span> arr_se <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;
+            <span class="asReserved">protected</span> <span class="asVar">var</span> dt <span class="asOperator">:</span> Date <span class="asOperator">=</span> <span class="asReserved">new</span> Date <span class="asBracket">()</span>;
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> initBoo <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                addEventListener<span class="asBracket">(</span><span class="asString">&quot;BooEvent&quot;</span>, handleBoo1<span class="asBracket">)</span>;
+                addEventListener<span class="asBracket">(</span><span class="asString">&quot;BooEvent&quot;</span>, handleBoo2<span class="asBracket">)</span>;                
+                
+                arr_se.addItem<span class="asBracket">(</span><span class="asString">&quot;sexy&quot;</span><span class="asBracket">)</span>;
+                arr_se.addItem<span class="asBracket">(</span><span class="asString">&quot;vasyano&quot;</span><span class="asBracket">)</span>;
+                arr_se.addItem<span class="asBracket">(</span>12<span class="asBracket">)</span>;
+                arr_se.addItem<span class="asBracket">(</span><span class="asReserved">false</span><span class="asBracket">)</span>;
+                arr_se.addItem<span class="asBracket">(</span>dt<span class="asBracket">)</span>;
+                
+                <span class="asComment">/*
+                mx.controls.Alert.show(&quot;pos sexy = &quot; + arr_se.getItemIndex(&quot;sexy&quot;));
+                mx.controls.Alert.show(&quot;pos vasyano = &quot; + arr_se.getItemIndex(&quot;vasyano&quot;));
+                mx.controls.Alert.show(&quot;pos str:12 = &quot; + arr_se.getItemIndex(&quot;12&quot;));
+                mx.controls.Alert.show(&quot;pos int:12 = &quot; + arr_se.getItemIndex(12));                
+                mx.controls.Alert.show(&quot;pos bool:false = &quot; + arr_se.getItemIndex(false));
+                mx.controls.Alert.show(&quot;pos 0 = &quot; + arr_se.getItemIndex(0));
+                mx.controls.Alert.show(&quot;pos str:false = &quot; + arr_se.getItemIndex(&quot;false&quot;));
+                mx.controls.Alert.show(&quot;pos date = &quot; + arr_se.getItemIndex(dt));
+                var dt2 : Date = new Date ();
+                dt2.setTime(dt.getTime());
+                mx.controls.Alert.show(&quot;pos date-ident = &quot; + arr_se.getItemIndex(dt2));
+                            
+                */</span>
+                
+                <span class="asVar">var</span> x <span class="asOperator">:</span> XML <span class="asOperator">=</span> recBuild <span class="asBracket">(</span>arr<span class="asBracket">)</span>;                                
+                tr.dataProvider <span class="asOperator">=</span> x;
+                
+            <span class="asBracket">}</span>
+            
+            
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> recBuild <span class="asBracket">(</span>obj <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span>XML<span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>obj <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asOperator">&lt;</span>NULL <span class="asOperator">/&gt;</span>;
+                <span class="asReserved">return</span> _recBuild <span class="asBracket">(</span>obj, <span class="asBracket">[])</span>;
+            <span class="asBracket">}</span>
+            
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> _recBuild <span class="asBracket">(</span>obj <span class="asOperator">:</span> Object, history <span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span>XML<span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>obj <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">null</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>history.indexOf<span class="asBracket">(</span>obj<span class="asBracket">)</span> <span class="asOperator">&gt;=</span> 0<span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asOperator">&lt;</span>prop name<span class="asOperator">=</span><span class="asString">&quot;#was#&quot;</span> <span class="asOperator">/&gt;</span>;
+                <span class="asVar">var</span> x <span class="asOperator">:</span> XML <span class="asOperator">=</span> <span class="asOperator">&lt;</span>prop <span class="asOperator">/&gt;</span>;
+                <span class="asVar">var</span> cnt_props<span class="asOperator">:</span>int <span class="asOperator">=</span> 0;
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> okey <span class="asOperator">:</span> Object <span class="asReserved">in</span> obj<span class="asBracket">){</span>
+                    <span class="asVar">var</span> ovalue <span class="asOperator">:</span> Object <span class="asOperator">=</span> obj<span class="asBracket">[</span>okey<span class="asBracket">]</span>;
+                    <span class="asVar">var</span> xprop <span class="asOperator">:</span> XML <span class="asOperator">=</span> <span class="asOperator">&lt;</span>prop <span class="asOperator">/&gt;</span>;
+                    xprop.@name <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span><span class="asOperator">+</span>okey;
+                    history.push<span class="asBracket">(</span>obj<span class="asBracket">)</span>;
+                    <span class="asVar">var</span> tmp <span class="asOperator">:</span> XML <span class="asOperator">=</span> _recBuild<span class="asBracket">(</span>ovalue, history<span class="asBracket">)</span>;
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>tmp <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                        xprop.appendChild<span class="asBracket">(</span><span class="asString">&quot;null&quot;</span><span class="asBracket">)</span>;    
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">else</span><span class="asBracket">{</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>tmp.localName<span class="asBracket">()</span> <span class="asOperator">==</span> <span class="asString">&quot;__tostring__&quot;</span><span class="asBracket">)</span>
+                        xprop.appendChild<span class="asBracket">(</span>tmp.children<span class="asBracket">()</span>.toString<span class="asBracket">())</span>;
+                    <span class="asReserved">else</span>
+                        xprop.appendChild<span class="asBracket">(</span>tmp<span class="asBracket">)</span>;
+                    <span class="asBracket">}</span>
+                    history.pop<span class="asBracket">()</span>;
+                    x.appendChild<span class="asBracket">(</span>xprop<span class="asBracket">)</span>;
+                    cnt_props<span class="asOperator">++</span>;
+                <span class="asBracket">}</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>cnt_props <span class="asOperator">==</span> 0<span class="asBracket">){</span>
+                    x <span class="asOperator">=</span> <span class="asOperator">&lt;</span>__tostring__ <span class="asOperator">/&gt;</span>;
+                    x.appendChild<span class="asBracket">(</span><span class="asString">&quot;&quot;</span><span class="asOperator">+</span>obj<span class="asBracket">)</span>;
+                    <span class="asReserved">return</span> x;
+                <span class="asBracket">}</span>
+                    
+                <span class="asReserved">return</span> x;
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> handleBoo1 <span class="asBracket">(</span>e<span class="asOperator">:</span>  BooEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asVar">var</span> s <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0 ; i <span class="asOperator">&lt;</span> 10000; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                  s <span class="asOperator">+=</span> <span class="asString">&quot;bye&quot;</span>;
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;handleBoo1: &quot;</span> <span class="asOperator">+</span> s.length<span class="asBracket">)</span>;                                  
+            <span class="asBracket">}</span>
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> handleBoo2 <span class="asBracket">(</span>e<span class="asOperator">:</span>  BooEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asVar">var</span> s <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> 10000; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                  s <span class="asOperator">+=</span> <span class="asString">&quot;hello&quot;</span>;
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;handleBoo2: &quot;</span> <span class="asOperator">+</span> s.length<span class="asBracket">)</span>;                                  
+
+            <span class="asBracket">}</span>
+
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> makeBoo <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;before Event&quot;</span><span class="asBracket">)</span>;
+                dispatchEvent<span class="asBracket">(</span><span class="asReserved">new</span> BooEvent <span class="asBracket">())</span>;                
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;after Event&quot;</span><span class="asBracket">)</span>;                
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> funcLabel <span class="asBracket">(</span>obj <span class="asOperator">:</span> XML<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+                <span class="asVar">var</span> lname <span class="asOperator">:</span> String <span class="asOperator">=</span> obj.localName<span class="asBracket">()</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>lname <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> obj.toString<span class="asBracket">()</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>lname <span class="asOperator">==</span> <span class="asString">&quot;tostring&quot;</span><span class="asBracket">)</span><span class="asReserved">return</span> obj.children<span class="asBracket">()</span>.toString<span class="asBracket">()</span>;
+                <span class="asVar">var</span> pname <span class="asOperator">:</span> XMLList <span class="asOperator">=</span> obj.@name;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>pname.length<span class="asBracket">()</span> <span class="asOperator">==</span> 0<span class="asBracket">)</span> 
+                    <span class="asReserved">return</span> <span class="asString">&quot;[object]&quot;</span>;
+                <span class="asReserved">return</span> pname<span class="asBracket">[</span>0<span class="asBracket">]</span>;
+            <span class="asBracket">}</span>
+        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>    
+    <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+
+        <span class="mxmlComponent">&lt;mx:DataGrid</span> dataProvider=&quot;<span class="mxmlString">{</span>arr<span class="mxmlString">}</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:columns&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">fio</span>&quot;  editable=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">sex</span>&quot; <span class="mxmlComponent">/&gt;</span>                
+            <span class="mxmlComponent">&lt;/mx:columns&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:DataGrid&gt;</span>
+
+        <span class="mxmlComponent">&lt;mx:Button</span> click=&quot;mx.controls.Alert.show<span class="asBracket">(</span>arr<span class="asBracket">[</span>0<span class="asBracket">]</span>.fio<span class="asBracket">)</span>;&quot; <span class="mxmlComponent">/&gt;</span>
+        
+        <span class="mxmlComponent">&lt;mx:Button</span> click=&quot;makeBoo<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; <span class="mxmlComponent">/&gt;</span>
+        
+        <span class="mxmlComponent">&lt;mx:Tree</span> id=&quot;<span class="mxmlString">tr</span>&quot; labelFunction=&quot;<span class="mxmlString">funcLabel</span>&quot; width=&quot;<span class="mxmlString">600</span>&quot; height=&quot;<span class="mxmlString">600</span>&quot;<span class="mxmlComponent">&gt;</span>
+            
+        <span class="mxmlComponent">&lt;/mx:Tree&gt;</span>
+
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+<span class="mxmlComponent">&lt;/mx:Application&gt;</span></pre></body>
+</html>

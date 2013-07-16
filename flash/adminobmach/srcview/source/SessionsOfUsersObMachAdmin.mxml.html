@@ -1,0 +1,109 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>SessionsOfUsersObMachAdmin.mxml</title>
+<link rel="stylesheet" type="text/css" href="../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:TitleWindow</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; 
+    xmlns:user = &quot;<span class="mxmlString">user_components.*</span>&quot;
+    layout=&quot;<span class="mxmlString">absolute</span>&quot; 
+    width=&quot;<span class="mxmlString">600</span>&quot; height=&quot;<span class="mxmlString">440</span>&quot;
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    title=&quot;<span class="mxmlString">Управление сессиями пользователей {</span>help_userLogin<span class="mxmlString">}({</span>help_userFIO<span class="mxmlString">})</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asReserved">import</span> logic.GlobalParams;
+            <span class="asReserved">import</span> mx.core.Application;
+            <span class="asReserved">import</span> mx.managers.PopUpManager;
+            <span class="asReserved">import</span> logic.HessianScrollEvent;
+            <span class="asReserved">import</span> user_components.SimpleClockPopup;
+            <span class="asReserved">import</span> logic.HessianDataSet;
+            <span class="asReserved">import</span> logic.IPopupWhileLoadingControl;
+            <span class="asReserved">import</span> logic.HessianDataSetEvent;
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>        
+            <span class="asReserved">private</span> <span class="asVar">var</span> dataset_logins<span class="asOperator">:</span>HessianDataSet;
+            
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>                    
+            <span class="asReserved">private</span> <span class="asVar">var</span> help_userLogin <span class="asOperator">:</span> String;
+
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>                    
+            <span class="asReserved">private</span> <span class="asVar">var</span> help_userFIO <span class="asOperator">:</span> String;
+
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> onDataSetReady <span class="asBracket">(</span>e<span class="asOperator">:</span> HessianDataSetEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                    
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">protected</span> <span class="asVar">var</span> filter  <span class="asOperator">:</span> Object;
+            <span class="asReserved">protected</span> <span class="asVar">var</span> defaults <span class="asOperator">:</span> Object;
+
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> doClose <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                PopUpManager.removePopUp<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;             
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> onAppendLogin <span class="asBracket">(</span>e<span class="asOperator">:</span> HessianScrollEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> key <span class="asOperator">:</span> Object <span class="asReserved">in</span> defaults<span class="asBracket">){</span>
+                    dataset_logins.currentRow <span class="asBracket">[</span>key<span class="asBracket">]</span> <span class="asOperator">=</span> defaults<span class="asBracket">[</span>key<span class="asBracket">]</span>;    
+                <span class="asBracket">}</span>
+                
+            <span class="asBracket">}</span>
+        
+            
+            <span class="asReserved">public</span> <span class="asFunction">function</span> executeLoginAdminWindow <span class="asBracket">(</span>
+                help_userLogin <span class="asOperator">:</span> String, help_userFIO <span class="asOperator">:</span> String,
+                filter <span class="asOperator">:</span> Object, defaults<span class="asOperator">:</span> Object 
+            <span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">this</span>.filter <span class="asOperator">=</span> filter;
+                <span class="asReserved">this</span>.defaults <span class="asOperator">=</span> defaults;
+                
+                <span class="asReserved">this</span>.help_userLogin <span class="asOperator">=</span> help_userLogin;
+                <span class="asReserved">this</span>.help_userFIO <span class="asOperator">=</span> help_userFIO;                
+                
+                <span class="asComment">// ------------------- testgroups --------------------------
+</span>                <span class="asVar">var</span> dlg_shower  <span class="asOperator">:</span> IPopupWhileLoadingControl <span class="asOperator">=</span> <span class="asReserved">new</span> SimpleClockPopup <span class="asBracket">()</span>;
+                
+                dataset_logins <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSet <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;admin&quot;</span><span class="asBracket">)</span>,<span class="asString">&quot;ob_user_login_log&quot;</span>, <span class="asReserved">null</span>, dlg_shower<span class="asBracket">)</span>;
+                dataset_logins.attachDataGrid <span class="asBracket">(</span>grid_logins<span class="asBracket">)</span>;
+                dataset_logins.attachNavigator<span class="asBracket">(</span>nav_logins<span class="asBracket">)</span>;
+                dataset_logins.addEventListener<span class="asBracket">(</span>HessianDataSetEvent.HESSIAN_CALL, onDataSetReady<span class="asBracket">)</span>;
+                dataset_logins.addEventListener<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_APPEND, onAppendLogin<span class="asBracket">)</span>;
+                dataset_logins.DS_Load<span class="asBracket">(</span>filter<span class="asBracket">)</span>;                            
+            <span class="asBracket">}</span><span class="asComment">// end of -- executeLoginAdminWindow -- 
+</span>            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> doUserActivities <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asVar">var</span> obi <span class="asOperator">:</span> ActivitiesOfUsersObMachAdmin <span class="asOperator">=</span> PopUpManager.createPopUp<span class="asBracket">(</span>DisplayObject <span class="asBracket">(</span>Application.application<span class="asBracket">)</span>,
+                ActivitiesOfUsersObMachAdmin, <span class="asReserved">true</span> <span class="asBracket">)</span> <span class="asReserved">as</span> ActivitiesOfUsersObMachAdmin;
+                PopUpManager.centerPopUp<span class="asBracket">(</span>obi<span class="asBracket">)</span>;
+                obi.executeActivitiesAdminWindow <span class="asBracket">(</span>
+                    help_userLogin , help_userFIO,
+                    <span class="asBracket">{</span>UserLoginLogID <span class="asOperator">:</span> dataset_logins.currentRow<span class="asBracket">[</span><span class="asString">&apos;UserLoginLogID&apos;</span><span class="asBracket">]}</span>,
+                    <span class="asBracket">{</span>UserLoginLogID <span class="asOperator">:</span> dataset_logins.currentRow<span class="asBracket">[</span><span class="asString">&apos;UserLoginLogID&apos;</span><span class="asBracket">]}</span>
+                <span class="asBracket">)</span>;
+
+            <span class="asBracket">}</span>
+            
+        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+    <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Button</span> click=&quot;doClose <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; label=&quot;<span class="mxmlString">Закрыть</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            
+            <span class="mxmlComponent">&lt;mx:DataGrid</span> id=&quot;<span class="mxmlString">grid_logins</span>&quot; height=&quot;<span class="mxmlString">275</span>&quot; editable=&quot;<span class="mxmlString">false</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;mx:columns&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">LoginDate</span>&quot; width=&quot;<span class="mxmlString">100</span>&quot; headerText=&quot;<span class="mxmlString">Дата</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">qty_activities</span>&quot;  headerText=&quot;<span class="mxmlString">Количество действий</span>&quot; width=&quot;<span class="mxmlString">200</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:columns&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:DataGrid&gt;</span>
+            <span class="mxmlComponent">&lt;user:DataNavigator</span> id=&quot;<span class="mxmlString">nav_logins</span>&quot;  width=&quot;<span class="mxmlString">100%</span>&quot; 
+                disabledCommandAppend=&quot;<span class="mxmlString">true</span>&quot;  
+                disabledCommandEdit=&quot;<span class="mxmlString">true</span>&quot;
+                disabledCommandPost=&quot;<span class="mxmlString">true</span>&quot;
+                <span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_activities_of_user</span>&quot; click=&quot;doUserActivities<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  label=&quot;<span class="mxmlString">Активность пользователя в данной сессии</span>&quot;<span class="mxmlComponent">/&gt;</span>                
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+<span class="mxmlComponent">&lt;/mx:TitleWindow&gt;</span></pre></body>
+</html>

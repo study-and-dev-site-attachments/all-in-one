@@ -1,0 +1,215 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>FeedbackObMachAdmin.mxml</title>
+<link rel="stylesheet" type="text/css" href="../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:TitleWindow</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; 
+    layout=&quot;<span class="mxmlString">absolute</span>&quot; 
+    width=&quot;<span class="mxmlString">400</span>&quot; height=&quot;<span class="mxmlString">300</span>&quot;
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    creationComplete=&quot;onInitApp<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;
+    xmlns:user = &quot;<span class="mxmlString">user_components.*</span>&quot;
+    implements=&quot;<span class="mxmlString">mx.rpc.IResponder</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asReserved">import</span> mx.collections.ArrayCollection;
+            <span class="asReserved">import</span> logic.blzdebugger;
+            <span class="asReserved">import</span> mx.rpc.AsyncToken;
+            <span class="asReserved">import</span> logic.SimpleDateFormatter;
+            <span class="asReserved">import</span> flash.utils.getTimer;
+            <span class="asReserved">import</span> mx.formatters.DateFormatter;
+            <span class="asReserved">import</span> logic.GlobalParams;
+            <span class="asReserved">import</span> mx.core.Application;
+            <span class="asReserved">import</span> mx.managers.PopUpManager;
+            <span class="asReserved">import</span> user_components.SimpleClockPopup;
+            <span class="asReserved">import</span> logic.IPopupWhileLoadingControl;
+            <span class="asReserved">import</span> logic.HessianDataSetEvent;
+            <span class="asReserved">import</span> hessian.client.HessianOperation;
+            <span class="asReserved">import</span> mx.events.ListEvent;
+            <span class="asReserved">import</span> mx.controls.Alert;
+            <span class="asReserved">import</span> logic.HessianDataSet;
+            <span class="asReserved">import</span> hessian.client.HessianService;
+        
+            
+
+            <span class="asReserved">private</span> <span class="asVar">var</span> service_testgroups <span class="asOperator">:</span> HessianService <span class="asOperator">=</span> <span class="asReserved">null</span>;
+            <span class="asReserved">private</span> <span class="asVar">var</span> service_feedback <span class="asOperator">:</span> HessianService <span class="asOperator">=</span> <span class="asReserved">null</span>;
+            
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> arrDataForGrid <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>            
+            <span class="asReserved">private</span> <span class="asVar">var</span> arrDataForCombo <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;            
+            
+    
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onInitApp <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                service_testgroups <span class="asOperator">=</span> <span class="asReserved">new</span> HessianService <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;analytics&quot;</span><span class="asBracket">))</span>;                                
+                service_feedback <span class="asOperator">=</span> <span class="asReserved">new</span> HessianService <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;analytics&quot;</span><span class="asBracket">))</span>;
+                <span class="asVar">var</span> token_testgroups<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span> service_testgroups.executeQuery.send <span class="asBracket">(</span><span class="asString">&quot;testgroups&quot;</span>, <span class="asBracket">{})</span>;
+                token_testgroups.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+            
+            
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doFilter <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>chk_if_by_group.selected <span class="asOperator">&amp;&amp;</span> combo_GroupID.selectedItem <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                    lab_status.text <span class="asOperator">=</span> <span class="asString">&apos;Ошибка, вы не указали группу по которой нужно выполнить фильтрацию&apos;</span>;
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>chk_if_by_dates.selected <span class="asOperator">&amp;&amp;</span> dtp_start.selectedDate <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                    lab_status.text <span class="asOperator">=</span> <span class="asString">&apos;Ошибка, вы не указали начальную дату для фильтрации&apos;</span>;
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>chk_if_by_dates.selected <span class="asOperator">&amp;&amp;</span> dtp_end.selectedDate <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                    lab_status.text <span class="asOperator">=</span> <span class="asString">&apos;Ошибка, вы не указали конечную дату для фильтрации&apos;</span>;
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                lab_status.text <span class="asOperator">=</span> <span class="asString">&apos;Начиную поиск ...&apos;</span>;                
+                
+                executeFilterAction <span class="asBracket">(</span>
+                    chk_if_by_group.selected<span class="asOperator">?</span>combo_GroupID.selectedItem<span class="asOperator">:</span><span class="asReserved">null</span>,
+                    chk_if_by_dates.selected<span class="asOperator">?</span>dtp_start.selectedDate<span class="asOperator">:</span><span class="asReserved">null</span>,                    
+                    chk_if_by_dates.selected<span class="asOperator">?</span>dtp_end.selectedDate<span class="asOperator">:</span><span class="asReserved">null</span>                        
+                <span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+            
+                        
+            <span class="asReserved">private</span> <span class="asFunction">function</span> executeFilterAction <span class="asBracket">(</span>groupObject <span class="asOperator">:</span> Object, start <span class="asOperator">:</span> Date , end <span class="asOperator">:</span> Date<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asVar">var</span> token_comments<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span> service_feedback.executeQuery.send <span class="asBracket">(</span><span class="asString">&quot;comments&quot;</span>, 
+                <span class="asBracket">{</span>
+                    testgroup_id <span class="asOperator">:</span> groupObject<span class="asOperator">!=</span><span class="asReserved">null</span><span class="asOperator">?</span>groupObject<span class="asBracket">[</span><span class="asString">&apos;TestGroupID&apos;</span><span class="asBracket">]</span><span class="asOperator">:</span><span class="asReserved">null</span>, date_start <span class="asOperator">:</span> start, date_end <span class="asOperator">:</span> end
+                <span class="asBracket">})</span>;
+                token_comments.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">public</span> <span class="asFunction">function</span> fault<span class="asBracket">(</span>info<span class="asOperator">:</span>Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;fault: &quot;</span> <span class="asOperator">+</span> info<span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+    
+    
+            <span class="asReserved">public</span> <span class="asFunction">function</span> result<span class="asBracket">(</span>data<span class="asOperator">:</span>Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                setTimeout<span class="asBracket">(</span>onResultQuery, 500, data<span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onResultQuery <span class="asBracket">(</span>data<span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asVar">var</span> i <span class="asOperator">:</span> int;
+                <span class="asVar">var</span>    col <span class="asOperator">:</span> DataGridColumn;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;status&apos;</span><span class="asBracket">]</span> <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                    mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;failed: onResultQuery = &quot;</span><span class="asOperator">+</span> data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;msg&apos;</span><span class="asBracket">])</span>;
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                <span class="asVar">var</span> querydata <span class="asOperator">:</span> Array <span class="asOperator">=</span> data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;chartdata&apos;</span><span class="asBracket">]</span>;
+                <span class="asVar">var</span> kind <span class="asOperator">:</span> String <span class="asOperator">=</span> data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;kind&apos;</span><span class="asBracket">]</span>;                
+                <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;testgroups&quot;</span><span class="asBracket">){</span>
+                    <span class="asComment">/*
+                    arrDataForCombo.removeAll();
+                    for (i = 0; i &lt; querydata.length; i++)
+                        arrDataForCombo.addItem( querydata[i]);
+                    */</span>
+                    arrDataForCombo <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection<span class="asBracket">(</span>querydata<span class="asBracket">)</span>;
+                <span class="asBracket">}</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;comments&quot;</span><span class="asBracket">){</span>
+                    <span class="asReserved">for</span> <span class="asBracket">(</span>i <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> 20; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                        col  <span class="asOperator">=</span> arr_results<span class="asBracket">[</span>i<span class="asBracket">]</span> <span class="asReserved">as</span> DataGridColumn;
+                        col.visible <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                        col.width<span class="asOperator">=</span> 1;
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>querydata.length <span class="asOperator">==</span> 0<span class="asBracket">)</span>                    
+                        <span class="asReserved">return</span>;
+                    <span class="asVar">var</span> n <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+                    <span class="asVar">var</span> names <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asBracket">[]</span>;
+                    <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> iObj <span class="asOperator">:</span> String <span class="asReserved">in</span> querydata<span class="asBracket">[</span>0<span class="asBracket">]){</span>
+                        <span class="asReserved">if</span> <span class="asBracket">(</span>iObj <span class="asOperator">==</span> <span class="asString">&quot;hessianTypeName&quot;</span><span class="asBracket">)</span> <span class="asReserved">continue</span>;
+                        n<span class="asOperator">++</span>;
+                        names.push<span class="asBracket">(</span> iObj <span class="asBracket">)</span>;
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">for</span> <span class="asBracket">(</span>i <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> n; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                        col  <span class="asOperator">=</span> arr_results<span class="asBracket">[</span>i<span class="asBracket">]</span> <span class="asReserved">as</span> DataGridColumn;
+                        col.visible <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                        col.width <span class="asOperator">=</span> <span class="asBracket">(</span>width<span class="asOperator">-</span> 30<span class="asBracket">)</span> <span class="asOperator">/</span> n;
+                        col.dataField <span class="asOperator">=</span> names <span class="asBracket">[</span>i<span class="asBracket">]</span>;
+                    <span class="asBracket">}</span>
+                    lab_status.text <span class="asOperator">=</span> <span class="asString">&apos;Поиск завершен. Найдено записей: &apos;</span> <span class="asOperator">+</span> querydata.length;
+                    arrDataForGrid <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">(</span>querydata<span class="asBracket">)</span>;
+                    <span class="asComment">/*
+                    arrDataForGrid.removeAll();
+                    for (i = 0; i &lt; querydata.length; i++)
+                        arrDataForGrid.addItem( querydata[i]);
+                    */</span>
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span>
+        
+
+            
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doUpdateUI <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                combo_GroupID.enabled <span class="asOperator">=</span> chk_if_by_group.selected;
+                dtp_start.enabled <span class="asOperator">=</span> chk_if_by_dates.selected;                
+                dtp_end.enabled <span class="asOperator">=</span> chk_if_by_dates.selected;                                
+            <span class="asBracket">}</span>
+        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+    <span class="mxmlComponent">&lt;mx:VBox</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+        <span class="mxmlComponent">&lt;mx:HBox</span> width=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">chk_if_by_group</span>&quot; selected=&quot;<span class="mxmlString">true</span>&quot;  change=&quot;doUpdateUI<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Выберите группу тестов из падающего списка</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:ComboBox</span> id=&quot;<span class="mxmlString">combo_GroupID</span>&quot;  labelField=&quot;<span class="mxmlString">TestGroupName</span>&quot; dataProvider=&quot;<span class="mxmlString">{</span>arrDataForCombo<span class="mxmlString">}</span>&quot;<span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+            <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">chk_if_by_dates</span>&quot; selected=&quot;<span class="mxmlString">true</span>&quot;  change=&quot;doUpdateUI<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>            
+                <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Укажите начальную дату отрезка</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DateField</span> id=&quot;<span class="mxmlString">dtp_start</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+            <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;&quot; <span class="mxmlComponent">/&gt;</span>            
+                <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Укажите конечную дату отрезка</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DateField</span> id=&quot;<span class="mxmlString">dtp_end</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+            
+            <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_filter</span>&quot; click=&quot;doFilter <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; label=&quot;<span class="mxmlString">Отобрать на основании фильтра</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Label</span> id=&quot;<span class="mxmlString">lab_status</span>&quot; text=&quot;&quot; <span class="mxmlComponent">/&gt;</span>
+        
+        <span class="mxmlComponent">&lt;mx:DataGrid</span> id=&quot;<span class="mxmlString">grid_results</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot; dataProvider=&quot;<span class="mxmlString">{</span>arrDataForGrid<span class="mxmlString">}</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:columns&gt;</span>
+                <span class="mxmlComponent">&lt;mx:Array</span> id=&quot;<span class="mxmlString">arr_results</span>&quot;<span class="mxmlComponent">&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_0</span>&quot;     <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_1</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_2</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_3</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_4</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_5</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_6</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_7</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_8</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_9</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_10</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_11</span>&quot;    <span class="mxmlComponent">/&gt;</span>                                                                                                                                                                                                                                                                                                                    
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_12</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_13</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_14</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_15</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_16</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_17</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_18</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> id=&quot;<span class="mxmlString">column_19</span>&quot;    <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:Array&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:columns&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:DataGrid&gt;</span>
+        
+        <span class="mxmlComponent">&lt;mx:VBox</span> width=&quot;<span class="mxmlString">100%</span>&quot; paddingLeft=&quot;<span class="mxmlString">20</span>&quot; paddingTop=&quot;<span class="mxmlString">20</span>&quot; paddingBottom=&quot;<span class="mxmlString">20</span>&quot; paddingRight=&quot;<span class="mxmlString">20</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Сообщение</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;mx:TextArea</span>  
+                id=&quot;<span class="mxmlString">txt_msg</span>&quot; width=&quot;<span class="mxmlString">90%</span>&quot; height=&quot;<span class="mxmlString">100</span>&quot; text=&quot;<span class="mxmlString">{</span>grid_results.selectedItem.Comment<span class="mxmlString">}</span>&quot; editable=&quot;<span class="mxmlString">false</span>&quot; <span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+        
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+<span class="mxmlComponent">&lt;/mx:TitleWindow&gt;</span></pre></body>
+</html>

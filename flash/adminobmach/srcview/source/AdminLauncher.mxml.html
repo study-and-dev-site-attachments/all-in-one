@@ -1,0 +1,123 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>AdminLauncher.mxml</title>
+<link rel="stylesheet" type="text/css" href="../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:Application</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; 
+    layout=&quot;<span class="mxmlString">absolute</span>&quot;
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    applicationComplete=&quot;onCompleteApp<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;
+    xmlns:user=&quot;<span class="mxmlString">*</span>&quot;
+    width=&quot;<span class="mxmlString">100%</span>&quot;
+    height=&quot;<span class="mxmlString">100%</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asReserved">import</span> logic.blzdebugger;
+        
+            <span class="asReserved">import</span> mx.managers.SystemManager;
+            <span class="asReserved">import</span> mx.controls.Alert;
+            <span class="asReserved">private</span> <span class="asVar">var</span> loginfrm <span class="asOperator">:</span> LoginForObMachAdmin  <span class="asOperator">=</span> <span class="asReserved">null</span>;
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+            <span class="asReserved">public</span> <span class="asVar">var</span> loadedSM<span class="asOperator">:</span>SystemManager;
+
+            <span class="asComment">// по завершению создания приложения инициализируем логгер и запускаем процедуру быстрого входа внутрь панели управления
+</span>            <span class="asReserved">private</span> <span class="asFunction">function</span> onCompleteApp <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                blzdebugger.IF_DEBUGGER_ACTIVE <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                blzdebugger.disableGlobalDebugFor<span class="asBracket">(</span><span class="asString">&quot;logic::Hessian*&quot;</span><span class="asBracket">)</span>;
+                blzdebugger.disableGlobalDebugFor<span class="asBracket">(</span><span class="asString">&quot;user_components.logic::*&quot;</span><span class="asBracket">)</span>;                
+                <span class="asVar">var</span> loc <span class="asOperator">:</span> blzdebugger <span class="asOperator">=</span> <span class="asReserved">new</span> blzdebugger<span class="asBracket">(</span><span class="asString">&quot;session_1&quot;</span><span class="asBracket">)</span>;
+                loc.disableDebugFor<span class="asBracket">(</span><span class="asString">&quot;logic.datasets*&quot;</span><span class="asBracket">)</span>;
+                loc.enableDebugFor<span class="asBracket">(</span><span class="asString">&quot;foo*&quot;</span><span class="asBracket">)</span>;
+                blzdebugger.enableGlobalDebugFor<span class="asBracket">(</span><span class="asString">&quot;bar.tar::*&quot;</span><span class="asBracket">)</span>;
+                <span class="asComment">//makeOnSuccessLogin (e);
+</span>            <span class="asBracket">}</span>
+            
+            <span class="asComment">// псевдофункция быстрого входа для тестирования
+</span>            <span class="asReserved">private</span> <span class="asFunction">function</span> makeOnSuccessLogin <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                login_frm.visible <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                login_frm.width <span class="asOperator">=</span> 0;
+                login_frm.height <span class="asOperator">=</span> 0;
+                
+                panebtns.visible <span class="asOperator">=</span> <span class="asReserved">true</span>;
+            <span class="asBracket">}</span>
+
+            <span class="asComment">// прячем все закладки
+</span>            <span class="asReserved">private</span> <span class="asFunction">function</span> hideAll <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                testgroups_frm.visible <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                testgroups_frm.width <span class="asOperator">=</span> 0;
+                testgroups_frm.height <span class="asOperator">=</span> 0;                
+                
+                users_frm.visible <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                users_frm.width <span class="asOperator">=</span> 0;
+                users_frm.height <span class="asOperator">=</span> 0;                
+                
+                analytics_frm.visible <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                analytics_frm.width <span class="asOperator">=</span> 0;
+                analytics_frm.height <span class="asOperator">=</span> 0;                
+                
+                feedback_frm.visible <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                feedback_frm.width <span class="asOperator">=</span> 0;
+                feedback_frm.height <span class="asOperator">=</span> 0;                
+            <span class="asBracket">}</span> 
+            <span class="asComment">// кнопка показывающая окно с набором тестов
+</span>            <span class="asReserved">private</span> <span class="asFunction">function</span> doShowTestGroups <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                hideAll <span class="asBracket">()</span>;
+                testgroups_frm.visible <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                testgroups_frm.width <span class="asOperator">=</span> width <span class="asOperator">-</span>30;
+                testgroups_frm.height <span class="asOperator">=</span> height <span class="asOperator">-</span> panebtns.height <span class="asOperator">-</span> 30;                
+                testgroups_frm.loadDataSet <span class="asBracket">()</span>;                
+            <span class="asBracket">}</span>
+
+            <span class="asComment">// кнопка показывающая окно со списком пользователей
+</span>            <span class="asReserved">private</span> <span class="asFunction">function</span> doShowUsers <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                hideAll <span class="asBracket">()</span>;                
+                users_frm.visible <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                users_frm.width <span class="asOperator">=</span> width <span class="asOperator">-</span> 30;
+                users_frm.height <span class="asOperator">=</span> height <span class="asOperator">-</span> panebtns.height <span class="asOperator">-</span> 30;                
+                users_frm.loadDataSet <span class="asBracket">()</span>;                
+            <span class="asBracket">}</span>
+
+            <span class="asComment">// показ окна аналитики
+</span>            <span class="asReserved">private</span> <span class="asFunction">function</span> doShowAnalytics <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                hideAll <span class="asBracket">()</span>;                
+                analytics_frm.visible <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                analytics_frm.width <span class="asOperator">=</span> width <span class="asOperator">-</span> 30;
+                analytics_frm.height <span class="asOperator">=</span> height <span class="asOperator">-</span> panebtns.height <span class="asOperator">-</span> 30;                
+            <span class="asBracket">}</span>
+            
+            <span class="asComment">// показ окна аналитики
+</span>            <span class="asReserved">private</span> <span class="asFunction">function</span> doShowFeedback <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                hideAll <span class="asBracket">()</span>;                
+                feedback_frm.visible <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                feedback_frm.width <span class="asOperator">=</span> width <span class="asOperator">-</span> 30;
+                feedback_frm.height <span class="asOperator">=</span> height <span class="asOperator">-</span> panebtns.height <span class="asOperator">-</span> 30;                
+            <span class="asBracket">}</span>
+            
+            
+            
+        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+    
+    <span class="mxmlComponent">&lt;mx:VBox</span> paddingLeft=&quot;<span class="mxmlString">10</span>&quot; paddingTop=&quot;<span class="mxmlString">10</span>&quot;  <span class="mxmlComponent">&gt;</span>
+        <span class="mxmlComponent">&lt;mx:HBox</span> id=&quot;<span class="mxmlString">panebtns</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; visible=&quot;<span class="mxmlString">false</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Button</span>  label=&quot;<span class="mxmlString">Наборы тестов</span>&quot; click=&quot;doShowTestGroups<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Button</span>  label=&quot;<span class="mxmlString">Пользователи</span>&quot; click=&quot;doShowUsers<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>        
+            <span class="mxmlComponent">&lt;mx:Button</span>  label=&quot;<span class="mxmlString">Аналитика</span>&quot; click=&quot;doShowAnalytics<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>        
+            <span class="mxmlComponent">&lt;mx:Button</span>  label=&quot;<span class="mxmlString">Обратная связь</span>&quot; click=&quot;doShowFeedback<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>                    
+        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+        <span class="mxmlComponent">&lt;user:LoginForObMachAdmin</span> id=&quot;<span class="mxmlString">login_frm</span>&quot; OnSuccessLogin=&quot;makeOnSuccessLogin<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  visible=&quot;<span class="mxmlString">true</span>&quot; width=&quot;<span class="mxmlString">800</span>&quot; height=&quot;<span class="mxmlString">640</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;user:TestGroupsObMachAdmin</span> id=&quot;<span class="mxmlString">testgroups_frm</span>&quot;  visible=&quot;<span class="mxmlString">false</span>&quot; width=&quot;<span class="mxmlString">0</span>&quot; height=&quot;<span class="mxmlString">0</span>&quot;<span class="mxmlComponent">/&gt;</span>    
+        <span class="mxmlComponent">&lt;user:UsersObMachAdmin</span> id=&quot;<span class="mxmlString">users_frm</span>&quot;  visible=&quot;<span class="mxmlString">false</span>&quot; width=&quot;<span class="mxmlString">0</span>&quot; height=&quot;<span class="mxmlString">0</span>&quot;<span class="mxmlComponent">/&gt;</span>    
+        <span class="mxmlComponent">&lt;user:AnalyticsObMachAdmin</span> id=&quot;<span class="mxmlString">analytics_frm</span>&quot;  visible=&quot;<span class="mxmlString">false</span>&quot; width=&quot;<span class="mxmlString">0</span>&quot; height=&quot;<span class="mxmlString">0</span>&quot;<span class="mxmlComponent">/&gt;</span>                    
+        <span class="mxmlComponent">&lt;user:FeedbackObMachAdmin</span> id=&quot;<span class="mxmlString">feedback_frm</span>&quot;  visible=&quot;<span class="mxmlString">false</span>&quot; width=&quot;<span class="mxmlString">0</span>&quot; height=&quot;<span class="mxmlString">0</span>&quot;<span class="mxmlComponent">/&gt;</span>            
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>    
+    
+<span class="mxmlComponent">&lt;/mx:Application&gt;</span></pre></body>
+</html>

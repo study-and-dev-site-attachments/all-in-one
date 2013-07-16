@@ -1,0 +1,365 @@
+<html>
+ <head>
+  <link rel="stylesheet" href="core.css" type="text/css" />
+   <script src="jquery.js"> </script>
+
+   <script src="gears_init.js"></script>
+
+   <script>
+     // созданы два ассоциативных массива (именнно в таком формате принимает входные данные jquery фукнция css)
+     // эти массивы соответствуют оформлению кнопки "Переключения режимов" в виде различных картинок-иконок
+     var ICON_OFFLINE = {'background-image' : 'url(disconnect24.png)'};
+     var ICON_ONLINE = {'background-image' : 'url(connect24.png)'};
+
+     // глобальный массив хранящий сведения об списке записей загруженных либо из локального источника данных, либо из internet
+     var glob_jsonnotes = null;
+
+     // ссылка на таблицу, где будет отображены загруженные записи записной книжки
+     var tab = null;
+
+     // как только документ был загружен необходимо вызвать функцию выполняющую настройку и запуск приложения
+     $(document).ready ( init );
+
+     // ссылка на подключение к базе данных
+     var db = null;
+
+     // строка сообщения (отображается) в левом углу окна и содержит сообщение о том, из какого источника данных были загружены элементы записной книжки
+
+     var msg_Offline = 'Данные загружены из локального хранилища';
+     var msg_Online = 'Данные загружены из internet';
+
+     // главная функция, ее назначение создать несколько глобальных переменных и затем запустить чтение содержимого записной книжки либо из internet либо из локального хранилища sqlite
+     function init (){
+       tab = $('#rows')[0]; 
+       if (!window.google || !google.gears) {
+          // в случае если поддержки google gears нет,то загрузка данных должна быть выполнена из internet
+          $('#hint_switch').html('google gears не доступен');
+          $('#hint_mode').html('google gears не доступен');  
+          loadFromInet(); 
+       }
+       else{  
+          setup (); 
+          // в противном случае создаем подключение к базе данных
+          // и в зависимости от того какой режим работы был активным в прошлый раз необходимо изменить интерфейс и загрузить данные ...
+          if (getConfig('mode') == 'offline'){
+             
+               $('#hint_mode').html (msg_Offline);
+	       $('#hint_switch').css (ICON_OFFLINE);
+               // загружаем данные из локального хранилища
+               loadFromLocal();
+	  }
+          else{
+               $('#hint_mode').html (msg_Online);
+               $('#hint_switch').css (ICON_ONLINE);
+               // загружаем данные из internet
+               loadFromInet(); 
+	  }
+          // привязываем к кнопке переключения режимов обработку события "клик"
+          $('#hint_switch').click (doSwitchMode);
+       }
+     }
+
+     // функция которая срабатывает при нажатии на кнопку "переключить режим работы"
+     function doSwitchMode (){
+       // сначала анализируем то, в каком из режимов сейчас находится приложение
+       if (getConfig('mode') == 'offline'){
+          // если мы находимся в режиме работы с локальным хранилищем данных, то необходимо выполнить сохранение локальной копии данных в internet
+          saveToInet ();
+          // а еще нужно изменить внешний вид кнопок
+          $('#hint_mode').html (msg_Online);
+          $('#hint_switch').css (ICON_ONLINE);
+          // и установить значение конфигурационной переменной в online
+          setConfig ('mode', 'online');
+       }
+       else{
+          // в противном случае загрузка данных идет из локального хранилища 
+          loadFromLocal();
+          // также меняем врешний вид приложения
+          $('#hint_mode').html (msg_Offline);
+          $('#hint_switch').css (ICON_OFFLINE);
+          // и установить значение конфигурационной переменной в offline
+          setConfig ('mode', 'offline');
+       }
+     }
+
+     //функция сохраняющая записи в локальное хранилище (записи будут взяты из глобального массива glob_jsonnotes)
+     function saveToLocal (){
+       db.execute ('delete from notes').close();
+       for (var i = 0; i < glob_jsonnotes.length; i++){
+         db.execute ('insert into notes (id, category, dateof, title, comment) values(?,?,?,?,?)', [
+           glob_jsonnotes[i].id,
+           glob_jsonnotes[i].category,
+           glob_jsonnotes[i].dateof,
+           glob_jsonnotes[i].title,
+           glob_jsonnotes[i].comment
+         ]).close ();
+       }
+     }
+
+     // вспомогательная функция выполнящая конвертирование произвольного JavaScript-объекта в формат JSON
+     function toJSON (x){
+        if (x == null) return null;
+        if(typeof x != "object") return '"'+encodeURIComponent(x)+'"';
+        var s = [];
+        if (x.constructor == Array){
+          for (var i in x) s.push (toJSON(x[i])); 
+          return "["+s.join (',')+"]";
+        }
+        else{
+          for (var i in x) s.push ('"'+i+'":'+toJSON(x[i])); 
+          return "{"+s.join (',')+"}";
+        }
+     }
+
+     // функция выполняющая сохранение информации из локального хранилища в internet
+     function saveToInet (){
+       // небольшой хак: если выполнялось редактирование записи (в форме внизу окна), то при нажатии на кнопку сохранения необходимо "подхватить" эти изменения
+       // имитируем нажатие на 
+       if (glob_jsonnotes.length > 0)
+         $.each($('tr:eq(1)', tab), 
+          function(i, n){
+              n.doEdit();
+          }
+         );
+       // а теперь можно выполнить отправку данных на сервер
+       $.ajax({                      
+        type: "POST", 
+        cache: false, 
+        url: "save_json.php", 
+        dataType : 'json', 
+        data : {records : toJSON(glob_jsonnotes)},
+         beforeSend: function (xml){
+	    xml.setRequestHeader("Content-Length", toJSON(glob_jsonnotes).length );
+	 },
+
+	success : loadFromInet,
+        error : function (e) {alert ('Не возможно сохранить данные на сервер')}});
+     }
+
+     // функция выполняющая загрузку данных из internet
+    function loadFromInet (){
+       $.ajax({                      
+            type: "GET", cache: false, url: "select_json.php", dataType : 'json',
+	    beforeSend:	function (xml){
+	     		xml.setRequestHeader("Content-Length", 0);
+	        },
+            success: function (e) {
+		fillTableFromJSON (e); if(db)saveToLocal(); 
+	    }, 
+            error : function (e) {
+		alert ('Не возможно загрузить данные из Internet. Код ошибки: '+e.status)
+	    }
+	});
+     }
+
+     // глобальная переменная хранящая значение текущей выделенной строки
+     var lastSavedRow = null;
+     
+     // функция которая выполняет визуализацию загруженных с сервера данных	
+     function fillTableFromJSON(notes){
+       // так как эта функция возможно вызывается многократно, то необходимо предварительно очистить таблицу от старых строк
+       lastSavedRow = null;
+       while (tab.rows.length > 1)
+          tab.deleteRow (1);
+
+       // сохраняем пришедшие данные в глобальный массив
+       glob_jsonnotes = notes;
+       var oRow = null;
+       var oCell = null;
+       //debugger
+       // организуем цикл по массиву сообщений
+       for (var i = 0; i < notes.length; i++){
+         var n = notes [i] ;
+         // создаем очередную строку
+         oRow = tab.insertRow(i + 1);
+         // у каждой строки будут два фиктивных атрибута id и id2. Их назначение - хранить номер записи (ID в таблице sqlite) и номер элемента массива.
+         $(oRow).attr ({id:i, id2: n.id});
+         // в нее помещаем три ячейки
+         oCell = oRow.insertCell(0);
+         oCell.innerHTML = n.category;
+         oCell = oRow.insertCell(1);
+         oCell.innerHTML = n.dateof;
+         oCell = oRow.insertCell(2);
+         oCell.innerHTML = n.title;
+         oRow.doEdit = doEdit;
+         $(oRow).click (doEdit);
+       }//for
+    } 
+
+    // функция обработчик события начать редактирование записи
+    function doEdit (){
+       // редактирование возможно только в режиме offline
+       if (getConfig('mode') != 'offline') {
+          alert ('Редактирование таблицы работает только в режиме ofline');
+          return;
+       }
+       // теперь нужно сбросить выделение для всех строк
+       $('tr', tab).css ({'background-color' : 'white'});
+       // и подсветить ту строку, по которой был выполнен "клик" красным цветом
+       $(this).css ({'background-color' : 'red'});
+
+       // в том случае, если ранее была выделена какая либо из строк, то необходимо сохранить введенные в форму (внизу страницы) в ...
+       if (lastSavedRow != null){
+          // обращаемся к элементам формы по их id-идентификаторам и получаем хранящиеся в них значения
+	  var category = $('#txt_category').attr('value');
+	  var dateof = $('#txt_date').attr('value');
+	  var title = $('#txt_title').attr('value');
+	  var comment = $('#txt_message').attr('value');
+
+          // теперь нужно выполнить сохранение изменений в локальное хранилище данных
+          db.execute ('UPDATE notes SET category = ?, dateof = ?, title = ?, comment = ? where id = ?', [
+		category,
+		dateof,
+		title,
+		comment,
+		lastSavedRow.id
+	  ]);
+          // обновить текущий элемент массива
+	  lastSavedRow.category = category;
+	  lastSavedRow.dateof = dateof;
+	  lastSavedRow.title = title;
+	  lastSavedRow.comment = comment;
+          // а также обновить внешний вид строки таблицы
+	  $('tr[@id2='+lastSavedRow.id+'] td:eq(0)').html(category); 
+	  $('tr[@id2='+lastSavedRow.id+'] td:eq(1)').html(dateof);
+	  $('tr[@id2='+lastSavedRow.id+'] td:eq(2)').html(title);  
+       }
+       // теперь сохраняем ссылку на активную новую запись
+       lastSavedRow = glob_jsonnotes [$(this).attr('id')]; 
+       // и помещаем внутрь элементов формы значения текущих элементов массива
+       $('#txt_category').attr ({value: lastSavedRow.category});
+       $('#txt_date').attr ({value: lastSavedRow.dateof});
+       $('#txt_title').attr ({value: lastSavedRow.title});
+       $('#txt_message').attr ({value: lastSavedRow.comment});
+    }
+
+    // функция выполняющая чтение данных из локального хранилища
+    function loadFromLocal (){
+      var rs = db.execute ('select * from notes');      
+      var data = [];
+      while (rs.isValidRow()){
+        data.push ({
+           id : rs.fieldByName('id'),
+           category : rs.fieldByName('category'),
+           dateof : rs.fieldByName('dateof'),
+           title : rs.fieldByName('title'),
+           comment : rs.fieldByName('comment')
+        });
+        rs.next ();
+      }
+      rs.close ();
+      fillTableFromJSON (data);
+      // по окончанию чтения данных их необхдимо визуализировать
+    }
+
+
+    // функция установки и настройки приложения перед работой
+    function setup (){
+        db = google.gears.factory.create('beta.database', '1.0');
+        db.open('notebook');
+        // на стадии отладки удобно очищать таблицы перед каждым открытием страницы
+        if (0){
+          db.execute('DROP TABLE IF EXISTS notes');
+          db.execute('DROP TABLE IF EXISTS config');
+        }
+        db.execute('CREATE TABLE IF NOT EXISTS notes (id INTEGER PRIMARY KEY, category varchar(100), dateof datetime, title varchar(100), comment TEXT)');
+        db.execute('CREATE TABLE IF NOT EXISTS config (id INTEGER PRIMARY KEY, variable varchar(100), value TEXT)');       
+    }
+
+    // функции работающие с таблицей конфигурационных переменных
+    // прежде всего, функция выполняющая проверку того, что переменная с заданным именем существует
+    function hasConfig (variable){
+      var rs = db.execute ('select 1 from config where variable = ?', [variable]);
+      var rez = rs.isValidRow(); 
+      rs.close ();
+      return rez;
+    }
+    // функция извлекающая значение переменной из таблицы-справочника
+    function getConfig (variable){
+      var rs = db.execute ('select value from config where variable = ?', [variable]);
+      var value = null;
+      if (rs.isValidRow())
+          value = rs.fieldByName ('value');
+      rs.close ();
+      return value;
+    }
+    // функция устанавливаяющая значение некоторой переменной
+    function setConfig (variable, value){
+      // в зависимости от того, существует ли такая переменная или нет в таблице необходимо либо добавить ее либо обновить
+      if (hasConfig(variable))
+         db.execute ('UPDATE config set value = ? where variable = ?', [value, variable]);
+      else
+         db.execute ('INSERT INTO config(variable, value) values (?,?)', [variable, value]);
+    }
+
+   </script>
+ </head>
+ <body>
+
+   <h1>
+       Демонстрационное приложение возможностей google gears
+   </h1>
+   <div class="hint_gears">
+          Gears - это технологии от google, которая позволяет изменить наш взгляд на веб-разработку и дает нам инструменты для 
+          создания веб-приложений наделенных чертами их более "серьезных" настольных собратьев. 
+          Созданное с помощью Gears приложение может работать без подключения к internet 
+          (все необходимые ресурсы будут храниться на локальной машине клиента), 
+          а после восстановления связи информация будет синхронизирована.
+   </div>
+
+
+   <table id="header" border="1" width="800"  cellspacing="0" cellpadding="0">
+    <tr>
+     <td id="hint_mode">Сообщаем какой режим активен</td>
+     <td id="center_hint">
+           <span class="arrow">&lt;------</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow_hint">Вы сейчас работаете в режиме</span>
+           <br />
+           <span class="arrow_hint">Используй кнопку для переключения режимов работы</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="arrow">------&gt;</span>
+     </td>
+     <td id="hint_switch" title="Кнопка переключения режимов работы приложения">&nbsp;</td>
+    </tr>
+   </table>
+
+   <table id="rows" border="0"  cellspacing="0" cellpadding="0">
+     <tr>
+       <th>Категория</th>
+       <th>Дата</th>
+       <th>Заголовок</th>
+     </tr>
+   </table>
+
+   <h2>Редактирование текущей записи</h2>
+
+   <table border="0" id="editor" cellspacing="0" cellpadding="0" id="frm" width="800">  
+    <tr>
+     <td class="cell_label">Категория:</td>
+     <td><input id="txt_category"  /></td>
+    </tr>
+    <tr>
+     <td class="cell_label">Дата:</td>
+     <td><input id="txt_date"  /></td>
+    </tr>
+    <tr>
+     <td class="cell_label">Заголовок:</td>
+     <td><input id="txt_title"  /></td>
+    </tr>
+    <tr>
+     <td class="cell_label">Сообщение:</td>
+     <td><textarea id="txt_message" cols="30" rows="3"></textarea></td>
+    </tr>
+   </table>
+
+   <div class="edit_hint">
+        В этой форме отображаются значение полей той записи, которую вы выбрали в таблице выше.
+        Редактирование работает только в режиме offline. Сохранение введенных значений в текстовое поле выполняется автоматически при выборе другой строки.
+        <br />
+        <div class="arrow">
+         ------------
+        </div>
+        <br />
+        Развлеките себя, добавьте к приложению функции не только редактирования записей но и добавления, удаления.
+        Также можно добавить функции редактирования изменений не только в режиме offline,но и в online (тут придется хорошенько поработать с ajax).
+        Сможете?
+   </div>
+ </body>
+</html>

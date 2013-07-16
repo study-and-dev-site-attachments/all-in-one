@@ -1,0 +1,120 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>DataNavigator.mxml</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:HBox</span> xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">36</span>&quot; cornerRadius=&quot;<span class="mxmlString">11</span>&quot; borderStyle=&quot;<span class="mxmlString">inset</span>&quot;<span class="mxmlComponent">&gt;</span>
+
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asReserved">import</span> logic.HessianScrollEvent;
+            <span class="asDoc">/**
+            Визуальный компонент представляющий собой навигатор по записям обычно отображемым с помощью некоторой сетки (DataGrid)
+            */</span>
+            <span class="asReserved">import</span> logic.HessianDataSetEvent;
+            <span class="asReserved">import</span> logic.HessianDataSetHeader;
+            <span class="asReserved">import</span> mx.events.ListEvent;
+            <span class="asReserved">import</span> mx.controls.DataGrid;
+            <span class="asReserved">import</span> user_components.logic.DataNavigator_logic;
+            <span class="asReserved">import</span> logic.HessianDataSet;
+            
+            <span class="asDoc">/**
+             Слежубная ссылка на экземпляр класса содержащего часть логики работы данного компонента
+             В идеале я хотел бы полностью отделить логику от представления 
+            */</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> ai <span class="asOperator">:</span> DataNavigator_logic <span class="asOperator">=</span> <span class="asReserved">new</span> DataNavigator_logic<span class="asBracket">(</span>DataNavigator<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">))</span>;
+            
+            <span class="asDoc">/**
+            Ссылка на источник данных привязанный к данному элементу управления
+            */</span>
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>            
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> dataSource<span class="asBracket">(</span>val<span class="asOperator">:</span>HessianDataSet<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+                   ai.dataSource <span class="asOperator">=</span> val;
+                   <span class="asReserved">if</span> <span class="asBracket">(</span>val <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                       val.addEventListener<span class="asBracket">(</span>HessianDataSetEvent.HESSIAN_CALL, ai.onDataSetReady<span class="asBracket">)</span>;
+                       
+                       val.addEventListener<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_APPEND, <span class="asFunction">function</span> <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                           ai.updateButtonsState<span class="asBracket">()</span>;
+                       <span class="asBracket">})</span>;
+                       val.addEventListener<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_EDIT, <span class="asFunction">function</span> <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                           ai.updateButtonsState<span class="asBracket">()</span>;
+                       <span class="asBracket">})</span>;
+                       val.addEventListener<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_CANCEL, <span class="asFunction">function</span> <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                           ai.updateButtonsState<span class="asBracket">()</span>;
+                       <span class="asBracket">})</span>;                       
+                       val.addEventListener<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_SCROLL, <span class="asFunction">function</span> <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                           ai.updateButtonsState<span class="asBracket">()</span>;
+                       <span class="asBracket">})</span>;
+                       
+                       
+                   <span class="asBracket">}</span>
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> dataSource<span class="asBracket">()</span><span class="asOperator">:</span>HessianDataSet <span class="asBracket">{</span>
+                   <span class="asReserved">return</span> ai.dataSource;
+            <span class="asBracket">}</span>    
+
+            
+
+            <span class="asReserved">protected</span> <span class="asVar">var</span> _disabledCommandAppend <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;
+            <span class="asReserved">protected</span> <span class="asVar">var</span> _disabledCommandEdit <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;
+            <span class="asReserved">protected</span> <span class="asVar">var</span> _disabledCommandPost <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;                        
+            <span class="asReserved">protected</span> <span class="asVar">var</span> _disabledCommandDelete <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;                                    
+            
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> disabledCommandAppend <span class="asBracket">(</span>_disabledCommandAppend <span class="asOperator">:</span> Boolean<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">this</span>._disabledCommandAppend  <span class="asOperator">=</span> _disabledCommandAppend;
+                ai.updateButtonsState<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> disabledCommandEdit <span class="asBracket">(</span>_disabledCommandEdit <span class="asOperator">:</span> Boolean<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">this</span>._disabledCommandEdit  <span class="asOperator">=</span> _disabledCommandEdit;
+                ai.updateButtonsState<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> disabledCommandPost <span class="asBracket">(</span>_disableCommandPost <span class="asOperator">:</span> Boolean<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">this</span>._disabledCommandPost  <span class="asOperator">=</span> _disabledCommandPost;
+                ai.updateButtonsState<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> disabledCommandDelete <span class="asBracket">(</span>_disableCommandDelete <span class="asOperator">:</span> Boolean<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">this</span>._disabledCommandDelete  <span class="asOperator">=</span> _disabledCommandDelete;
+                ai.updateButtonsState<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> disabledCommandAppend <span class="asBracket">()</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+                <span class="asReserved">return</span> <span class="asReserved">this</span>._disabledCommandAppend;
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> disabledCommandEdit <span class="asBracket">()</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+                <span class="asReserved">return</span> <span class="asReserved">this</span>._disabledCommandEdit;
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> disabledCommandPost <span class="asBracket">()</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+                <span class="asReserved">return</span> <span class="asReserved">this</span>._disabledCommandPost;
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> disabledCommandDelete <span class="asBracket">()</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+                <span class="asReserved">return</span> <span class="asReserved">this</span>._disabledCommandDelete;
+            <span class="asBracket">}</span>
+        
+
+        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_first</span>&quot; toolTip=&quot;<span class="mxmlString">К первой</span>&quot; click=&quot;ai.onGotoFirstHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/first_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/first_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>                
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_prev</span>&quot; toolTip=&quot;<span class="mxmlString">К предыдущей</span>&quot; click=&quot;ai.onGotoPrevHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/previous_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/previous_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_next</span>&quot; toolTip=&quot;<span class="mxmlString">К следующей</span>&quot; click=&quot;ai.onGotoNextHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/next_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/next_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_last</span>&quot; toolTip=&quot;<span class="mxmlString">К последней</span>&quot; click=&quot;ai.onGotoLastHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/last_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/last_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    
+    <span class="mxmlComponent">&lt;mx:Spacer</span> width=&quot;<span class="mxmlString">20%</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_append</span>&quot; toolTip=&quot;<span class="mxmlString">Добавить запись</span>&quot; click=&quot;ai.onAppendRecordHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot;  disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/insert_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/insert_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_delete</span>&quot; toolTip=&quot;<span class="mxmlString">Удалить запись</span>&quot; click=&quot;ai.onDeleteRecordHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/delete_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/delete_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_edit</span>&quot; toolTip=&quot;<span class="mxmlString">Править запись</span>&quot; click=&quot;ai.onEditRecordHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/edit_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/edit_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_post</span>&quot; toolTip=&quot;<span class="mxmlString">Сохранить изменения</span>&quot; click=&quot;ai.onPostRecordHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot;  disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/post_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/post_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_cancel</span>&quot; toolTip=&quot;<span class="mxmlString">Отменить изменения</span>&quot; click=&quot;ai.onCancelRecordHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/cancel_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/cancel_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    
+    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">nav_reload</span>&quot; toolTip=&quot;<span class="mxmlString">Переоткрыть</span>&quot; click=&quot;ai.onReloadRecordHandler <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>&quot; disabledIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/refresh_square24_d.jpg&apos;)</span>&quot; icon=&quot;<span class="mxmlString">@Embed(&apos;assets/grid/refresh_square24_h.jpg&apos;)</span>&quot;<span class="mxmlComponent">/&gt;</span>    
+    
+    
+<span class="mxmlComponent">&lt;/mx:HBox&gt;</span></pre></body>
+</html>

@@ -1,0 +1,41 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>GlobalParams.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> logic
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> mx.controls.Alert;
+    
+    <span class="asDoc">/**
+     * Вспомогательный класс содержит строку адреса подключения к серверу hessian
+     */</span> 
+    <span class="asReserved">public</span> <span class="asClass">class</span> GlobalParams
+    <span class="asBracket">{</span>
+        <span class="asReserved">protected</span> <span class="asReserved">static</span> <span class="asReserved">const</span> URL_2_HESSIAN_WEB <span class="asOperator">:</span> String  <span class="asOperator">=</span> <span class="asString">&quot;http://java.black-zorro.com/&quot;</span>;
+        <span class="asReserved">protected</span> <span class="asReserved">static</span> <span class="asReserved">const</span> URL_2_HESSIAN_HOME <span class="asOperator">:</span> String  <span class="asOperator">=</span> <span class="asString">&quot;http://center:8080/flex/&quot;</span>;        
+
+        <span class="asReserved">protected</span> <span class="asReserved">static</span> <span class="asReserved">const</span> SERVICE_ADMIN <span class="asOperator">:</span> String  <span class="asOperator">=</span> <span class="asString">&quot;hessian/mysqlobmachadmin&quot;</span>;
+        <span class="asReserved">protected</span> <span class="asReserved">static</span> <span class="asReserved">const</span> SERVICE_ANALYTICS <span class="asOperator">:</span> String  <span class="asOperator">=</span> <span class="asString">&quot;hessian/mysqlobmachanalytics&quot;</span>;        
+        
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> getHessianURL <span class="asBracket">(</span>kind <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asVar">var</span> base <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asReserved">false</span><span class="asBracket">)</span>
+             base <span class="asOperator">=</span> URL_2_HESSIAN_HOME;
+            <span class="asReserved">else</span>
+             base <span class="asOperator">=</span> URL_2_HESSIAN_WEB;
+            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;admin&quot;</span><span class="asBracket">)</span> <span class="asReserved">return</span> base <span class="asOperator">+</span> SERVICE_ADMIN;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;analytics&quot;</span><span class="asBracket">)</span> <span class="asReserved">return</span> base <span class="asOperator">+</span> SERVICE_ANALYTICS;            
+            mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;Ошибка запрошено веб-имя неизвестного сервиса: &quot;</span> <span class="asOperator">+</span> kind<span class="asBracket">)</span>;
+            <span class="asReserved">return</span> <span class="asReserved">null</span>; 
+        <span class="asBracket">}</span>
+        
+        
+    <span class="asBracket">}</span>
+<span class="asBracket">}</span></pre></body>
+</html>

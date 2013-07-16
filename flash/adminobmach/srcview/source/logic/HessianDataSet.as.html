@@ -1,0 +1,704 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>HessianDataSet.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> logic
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> mx.collections.ArrayCollection;
+    <span class="asReserved">import</span> flash.events.Event;
+    <span class="asReserved">import</span> mx.rpc.events.InvokeEvent;
+    <span class="asReserved">import</span> mx.rpc.events.ResultEvent;
+    <span class="asReserved">import</span> mx.rpc.events.FaultEvent;
+    <span class="asReserved">import</span> flash.utils.setTimeout;
+    <span class="asReserved">import</span> flash.utils.ByteArray;
+    <span class="asReserved">import</span> mx.controls.Alert;
+    <span class="asReserved">import</span> flash.events.EventDispatcher;
+    <span class="asReserved">import</span> mx.controls.DataGrid;
+    <span class="asReserved">import</span> mx.events.ListEvent;
+    <span class="asReserved">import</span> user_components.DataNavigator;
+    <span class="asReserved">import</span> hessian.client.HessianService;
+    <span class="asReserved">import</span> mx.rpc.AsyncToken;
+    <span class="asReserved">import</span> mx.automation.IAutomationObject;
+    <span class="asReserved">import</span> mx.rpc.IResponder;
+    <span class="asReserved">import</span> mx.managers.PopUpManager;    
+    
+    <span class="asReserved">public</span> <span class="asClass">class</span> HessianDataSet <span class="asReserved">extends</span> EventDispatcher <span class="asReserved">implements</span> mx.rpc.IResponder
+    <span class="asBracket">{</span>
+        <span class="asDoc">/**
+         * События:
+         *   dataSetReady - основное событие для класса HessianDataSet
+         * выбрасывается каждый раз когда состояние набора данных изменяется - 
+         * на каждый запрос к серверу генерируется событие STATUS_STARTING - это значит запрос был начат
+         * в случае успешного завершения запроса к серверу генерируется событие STATUS_OK
+         * если запрос был не успешен то выбрасывается событие STATUS_FAIL
+         *   dataSetScrolled - выбрасывается когда набор данных меняет текущую запись
+         * либо была запрошена одна из операций (редактирование, удаление, добавление, отмена изменений, переход к первой, предыдущей, последующей и последней записи)
+         */</span> 
+        <span class="asComment">//[Event(name=&quot;dataSetReady&quot;, type=&quot;logic.HessianDataSetEvent&quot;)]
+</span>                                                
+        <span class="asDoc">/**
+         * Ссылка на объект logger
+         */</span>         
+        <span class="asReserved">public</span> <span class="asVar">var</span> logger <span class="asOperator">:</span> blzdebugger <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asDoc">/**
+         * ссылка на объект HessianService выполняющий все задачи вызов RPC на сервере
+         */</span> 
+        <span class="asReserved">private</span> <span class="asVar">var</span> service<span class="asOperator">:</span>HessianService <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asDoc">/**
+         * имя источника данных, именно это имя служит для сервера основой для выбора SQL-команд
+         */</span> 
+        <span class="asReserved">private</span> <span class="asVar">var</span> datasetName<span class="asOperator">:</span>String <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asDoc">/**
+         * Имя запроса который был последним отправлен на сервер
+         */</span>
+        <span class="asReserved">private</span> <span class="asVar">var</span> lastCallFunctionName <span class="asOperator">:</span> String;
+        <span class="asDoc">/**
+         * Ссылка на функцию которая используется для форматирования полей типа ДАТА-ВРЕМЯ
+         */</span>
+        <span class="asReserved">private</span> <span class="asVar">var</span> dateTimeFormatFunction <span class="asOperator">:</span> Function <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asDoc">/**
+         * Служебная переменная играет роль флага - признака того, что в настоящий момент идет выполнение
+         * операции копирования данных из элементов управления внутрь массива с данными или из массива записей
+         * в элементы управления
+         */</span> 
+        <span class="asReserved">private</span> <span class="asVar">var</span> inDataBindingHandler <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;
+        
+        <span class="asDoc">/**
+         * Ссылка на &quot;разобранные&quot; данные полученные от сервера - список записей вместе метаинформацией об полях
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> rawData <span class="asOperator">:</span> HessianDataSetWrapper <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        
+        <span class="asDoc">/**
+         * Служебная переменная хранит текущее значение записи - является копией записи на момент до начала ее редактирования
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> currentClone <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">new</span> Array;        
+        
+        
+        <span class="asReserved">protected</span> <span class="asVar">var</span> isLocateEvent <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;
+        <span class="asDoc">/**
+         * Переменная играет роль признакак того, что набор данных находится в режиме редактирования
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> isInEditState <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;
+
+        <span class="asDoc">/**
+         * Ссылка на номер текущей записи. Доступ к этой переменной на прямую запрещен: следет обращаться через свойство currentRowIdx
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> _currentRowIdx <span class="asOperator">:</span> int <span class="asOperator">=</span> <span class="asOperator">-</span>1;
+        
+        <span class="asDoc">/**
+         * Свойство хранящее номер текущей записи, при изменении номера выполняется генерация события dataSetScrolled
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> currentRowIdx <span class="asBracket">()</span><span class="asOperator">:</span>int<span class="asBracket">{</span>
+            <span class="asReserved">return</span> _currentRowIdx;
+        <span class="asBracket">}</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> currentRowIdx <span class="asBracket">(</span>idx<span class="asOperator">:</span> int<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;currentRowIdx = &quot;</span><span class="asOperator">+</span> idx<span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>_currentRowIdx <span class="asOperator">==</span> idx<span class="asBracket">){</span>
+                <span class="asComment">//isInEditState = false;                
+</span>                <span class="asComment">//return;
+</span>            <span class="asBracket">}</span>
+            _currentRowIdx <span class="asOperator">=</span> idx;
+            isInEditState <span class="asOperator">=</span> <span class="asReserved">false</span>;            
+            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>idx <span class="asOperator">&lt;</span> rawData.records.length<span class="asBracket">)</span>
+                currentRow <span class="asOperator">=</span> rawData.records<span class="asBracket">[</span>idx<span class="asBracket">]</span>;
+            <span class="asReserved">else</span>
+                currentRow <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>grid <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                <span class="asComment">//grid.selectedIndex = -1;
+</span>                grid.selectedIndex <span class="asOperator">=</span> idx;                
+            <span class="asBracket">}</span>
+            <span class="asVar">var</span> ba <span class="asOperator">:</span> ByteArray <span class="asOperator">=</span> <span class="asReserved">new</span> ByteArray <span class="asBracket">()</span>;
+            ba.writeObject<span class="asBracket">(</span>currentRow<span class="asBracket">)</span>;
+            ba.position <span class="asOperator">=</span> 0;
+            currentClone <span class="asOperator">=</span> ba.readObject<span class="asBracket">()</span>;
+            ba.length <span class="asOperator">=</span> 0;
+            
+            dataBindingToUI <span class="asBracket">()</span>;    
+            
+            fireDataSetScrolled <span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_SCROLL<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         * Свойство ссылка на текущую запись, на самом деле перенаправляет вызовы к объекту rawData
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> currentRow <span class="asBracket">(</span>row<span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;currentRow = &quot;</span><span class="asOperator">+</span> row<span class="asBracket">)</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rawData <span class="asOperator">==</span> <span class="asReserved">null</span> <span class="asOperator">||</span> rawData.ready <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">)</span> <span class="asReserved">return</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rawData.records.length <span class="asOperator">&lt;=</span> currentRowIdx<span class="asBracket">)</span> <span class="asReserved">return</span>;
+            rawData.records <span class="asBracket">[</span>currentRowIdx<span class="asBracket">]</span> <span class="asOperator">=</span> row;
+            
+        <span class="asBracket">}</span>        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> currentRow <span class="asBracket">()</span><span class="asOperator">:</span>Object<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rawData <span class="asOperator">==</span> <span class="asReserved">null</span> <span class="asOperator">||</span> rawData.ready <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rawData.records.length<span class="asOperator">&gt;</span>currentRowIdx<span class="asBracket">)</span>
+                <span class="asReserved">return</span> rawData.records <span class="asBracket">[</span>currentRowIdx<span class="asBracket">]</span>;
+            <span class="asReserved">return</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+        <span class="asBracket">}</span>        
+
+        <span class="asDoc">/**
+         * Конструктор класса, выполняет создание набора данных
+         * @param name Имя набора данных
+         * @param dateTimeFormatFunction Имя функции используемой для форматирования полей ДАТА-ВРЕМЯ
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> HessianDataSet <span class="asBracket">(</span>
+        url2hessian <span class="asOperator">:</span> String,
+        name <span class="asOperator">:</span> String, dateTimeFormatFunction <span class="asOperator">:</span> Function,
+        dlg_shower_while_loading_obj <span class="asOperator">:</span> IPopupWhileLoadingControl
+        <span class="asBracket">){</span>
+            <span class="asReserved">this</span>.dlg_shower_while_loading_obj <span class="asOperator">=</span> dlg_shower_while_loading_obj;
+            <span class="asReserved">this</span>.dateTimeFormatFunction  <span class="asOperator">=</span> dateTimeFormatFunction;
+            <span class="asReserved">this</span>.datasetName <span class="asOperator">=</span> name;
+            addEventListener<span class="asBracket">(</span>HessianDataSetEvent.HESSIAN_CALL, onStatusChangeProgressShower<span class="asBracket">)</span>;
+            service <span class="asOperator">=</span> <span class="asReserved">new</span> HessianService <span class="asBracket">(</span>url2hessian<span class="asBracket">)</span>;
+            logger <span class="asOperator">=</span> <span class="asReserved">new</span> blzdebugger<span class="asBracket">(</span>name<span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- HessianDataSet --
+</span>        
+        <span class="asDoc">/**
+         * Ссылка на объект представляющий собой это самое диалоговое окно
+         */</span>
+        <span class="asReserved">protected</span> <span class="asVar">var</span> dlg_shower_while_loading_obj <span class="asOperator">:</span> IPopupWhileLoadingControl <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asDoc">/**
+         * Функция слушает события происходящие с набором данных. Когда начинается загрузка информации с сервера
+         * то показывается диалоговое окно прогресса и соответственно когда запрос завершился удачно или нет
+         * то окно прогресса прячется
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> onStatusChangeProgressShower <span class="asBracket">(</span>evt <span class="asOperator">:</span> HessianDataSetEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>evt.status <span class="asOperator">==</span> HessianDataSetEvent.STATUS_STARTING<span class="asBracket">)</span>
+                dlg_shower_while_loading_obj.onStart<span class="asBracket">()</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>evt.status <span class="asOperator">==</span> HessianDataSetEvent.STATUS_OK <span class="asOperator">||</span> evt.status <span class="asOperator">==</span> HessianDataSetEvent.STATUS_FAIL<span class="asBracket">)</span>
+                dlg_shower_while_loading_obj.onStop<span class="asBracket">()</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         *  функция обработчик ситуации данные от сервера не были получены        
+         */</span>
+         <span class="asReserved">public</span> <span class="asFunction">function</span> fault<span class="asBracket">(</span>info<span class="asOperator">:</span>Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;fault = &quot;</span><span class="asOperator">+</span> info<span class="asBracket">)</span>;                                     
+            fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_FAIL, <span class="asString">&quot;fault: &quot;</span><span class="asOperator">+</span> info<span class="asBracket">)</span>;                            
+        <span class="asBracket">}</span>
+
+        <span class="asDoc">/**
+         * Функция обработчик ситуации данные от сервера не были получены        
+         * Заглушка откладывающая обработку данных пришедших от сервера на некоторое время
+         * Это было необходимо т.к. без задержки результат разбора еще не был готов (lastResult всегда был равен null)
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> result<span class="asBracket">(</span>data<span class="asOperator">:</span>Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;result = &quot;</span><span class="asOperator">+</span> data<span class="asBracket">)</span>;                        
+            setTimeout<span class="asBracket">(</span>onResult, 500<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+
+        <span class="asDoc">/**
+         * Функция выполняющая разбор пришедших от сервера данных
+         */</span> 
+        <span class="asReserved">private</span> <span class="asFunction">function</span> onResult <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;onResult (lastCallFunctionName = &quot;</span><span class="asOperator">+</span>lastCallFunctionName<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;                        
+                        
+            isInEditState <span class="asOperator">=</span> <span class="asReserved">false</span>;
+            isLocateEvent <span class="asOperator">=</span> <span class="asReserved">false</span>;
+            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_FAIL, <span class="asString">&quot;&quot;</span><span class="asBracket">)</span>;                
+                <span class="asReserved">return</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>lastCallFunctionName <span class="asOperator">==</span> HessianDataSetEvent.CMD_LOADDATASET<span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.status <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                    SQLAlert.show<span class="asBracket">(</span><span class="asString">&quot;Не возможно загрузить набор данных: &quot;</span> <span class="asOperator">+</span> service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;                    
+                    fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_FAIL, service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;                
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                <span class="asVar">var</span> ba<span class="asOperator">:</span> ByteArray <span class="asOperator">=</span> <span class="asReserved">new</span> ByteArray <span class="asBracket">()</span>;                
+                ba.writeObject <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult<span class="asBracket">)</span>;
+                ba.position <span class="asOperator">=</span> 0;
+                <span class="asVar">var</span> clone <span class="asOperator">:</span> Object <span class="asOperator">=</span> ba.readObject <span class="asBracket">()</span>;
+                rawData <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSetWrapper<span class="asBracket">(</span>clone<span class="asBracket">[</span><span class="asString">&apos;wrapper&apos;</span><span class="asBracket">]</span>, dateTimeFormatFunction<span class="asBracket">)</span>;
+                <span class="asComment">//DataSet = null;// exec binding handler
+</span>                ba.length <span class="asOperator">=</span> 0;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>grid<span class="asBracket">){</span>
+                    grid.dataProvider  <span class="asOperator">=</span> rawData.records;
+                <span class="asBracket">}</span>
+                currentRowIdx <span class="asOperator">=</span> 0;
+                
+                setTimeout<span class="asBracket">(</span><span class="asFunction">function</span> <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>cancelRecord<span class="asBracket">()</span>;<span class="asBracket">}</span>, 500<span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// if load
+</span>            <span class="asReserved">if</span> <span class="asBracket">(</span>lastCallFunctionName <span class="asOperator">==</span> HessianDataSetEvent.CMD_LOADRECORD<span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.status <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                    SQLAlert.show<span class="asBracket">(</span><span class="asString">&quot;Не возможно загрузить запись по указанному идентификатору : &quot;</span><span class="asOperator">+</span> service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;
+                    fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_FAIL, service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;                
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                    rawData.replaceRecordByRawData <span class="asBracket">(</span>currentRowIdx, service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.wrapper<span class="asBracket">)</span>;
+                    isInEditState <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                    dataBindingToUI<span class="asBracket">()</span>;
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span><span class="asComment">// if delete 
+</span>            <span class="asReserved">if</span> <span class="asBracket">(</span>lastCallFunctionName <span class="asOperator">==</span> HessianDataSetEvent.CMD_DELETERECORD<span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.status <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                    SQLAlert.show<span class="asBracket">(</span><span class="asString">&quot;Не возможно удалить запись: &quot;</span><span class="asOperator">+</span> service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;
+                    fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_FAIL, service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;                
+                    <span class="asReserved">return</span>;                    
+                <span class="asBracket">}</span>
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                    <span class="asVar">var</span> rec<span class="asOperator">:</span> Object <span class="asOperator">=</span> rawData.records.getItemAt<span class="asBracket">(</span>currentRowIdx<span class="asBracket">)</span>;
+                    rawData.records.removeItemAt<span class="asBracket">(</span>currentRowIdx<span class="asBracket">)</span>;
+                    rawData.records_status.removeItemAt<span class="asBracket">(</span>currentRowIdx<span class="asBracket">)</span>;
+                    currentRowIdx <span class="asOperator">=</span> 0;
+                    isInEditState <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                    dataBindingToUI<span class="asBracket">()</span>;
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span><span class="asComment">// if delete 
+</span>            <span class="asReserved">if</span> <span class="asBracket">(</span>lastCallFunctionName <span class="asOperator">==</span> HessianDataSetEvent.CMD_POSTRECORD<span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.status <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                    SQLAlert.show<span class="asBracket">(</span><span class="asString">&quot;Не возможно сохранить изменения: &quot;</span> <span class="asOperator">+</span> service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;
+                    isInEditState <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                    fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_FAIL, service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.msg<span class="asBracket">)</span>;                
+                    <span class="asReserved">return</span>;                    
+                <span class="asBracket">}</span>
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                    rawData.records.setItemAt<span class="asBracket">(</span>currentRow, currentRowIdx<span class="asBracket">)</span>;
+                    rawData.records_status.setItemAt<span class="asBracket">(</span><span class="asString">&quot;persist&quot;</span>, currentRowIdx<span class="asBracket">)</span>;
+                    <span class="asComment">//currentRowIdx = 0;
+</span>                    isInEditState <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                    <span class="asComment">// порядок но теперь нужно подзагрузить запись заново
+</span>                    
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.params<span class="asBracket">[</span><span class="asString">&apos;last_insert_id&apos;</span><span class="asBracket">]){</span>
+                        reloadRecordById <span class="asBracket">(</span>service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.lastResult.params<span class="asBracket">[</span><span class="asString">&apos;last_insert_id&apos;</span><span class="asBracket">])</span>;
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">else</span><span class="asBracket">{</span>
+                        <span class="asVar">var</span> pid <span class="asOperator">:</span> Object <span class="asOperator">=</span> rawData.getRecordIDByNum<span class="asBracket">(</span>currentRowIdx<span class="asBracket">)</span>;
+                        <span class="asReserved">if</span> <span class="asBracket">(</span>pid <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                            SQLAlert.show<span class="asBracket">(</span><span class="asString">&quot;не возможно выполнить загрузку записи по ее идентификатору, идентификатор не обнаружен&quot;</span><span class="asBracket">)</span>;
+                            <span class="asReserved">return</span>;
+                        <span class="asBracket">}</span>
+                        reloadRecordById<span class="asBracket">(</span>pid<span class="asBracket">)</span>;
+                    <span class="asBracket">}</span>                        
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span><span class="asComment">// if post
+</span>            
+            fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_OK, <span class="asString">&quot;HessianDataSet::onResult&quot;</span><span class="asBracket">)</span>;                
+
+        <span class="asBracket">}</span><span class="asComment">// end of -- onResult -- 
+</span>        
+        
+        <span class="asDoc">/**
+         * Функция возвращает значение поля записи под указанным номером
+         * @param idx Номер записи
+         * @param fieldName Имя поля
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getFieldValueForSpec <span class="asBracket">(</span>idx <span class="asOperator">:</span> int, fieldName <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>idx <span class="asOperator">&lt;</span> 0 <span class="asOperator">||</span> idx <span class="asOperator">&gt;=</span> rawData.records.length<span class="asBracket">)</span>
+                <span class="asReserved">return</span> <span class="asReserved">null</span>;
+            <span class="asReserved">else</span>    
+                <span class="asReserved">return</span> rawData.records<span class="asBracket">[</span>idx<span class="asBracket">][</span>fieldName<span class="asBracket">]</span>;            
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asDoc">/**
+         * Функция возвращает количество записей в наборе
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getRecordCount <span class="asBracket">()</span><span class="asOperator">:</span>int<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rawData <span class="asOperator">!=</span> <span class="asReserved">null</span> <span class="asOperator">&amp;&amp;</span> rawData.ready<span class="asBracket">)</span>
+                <span class="asReserved">return</span> rawData.getRecordCount<span class="asBracket">()</span>;
+            <span class="asReserved">return</span> 0;    
+        <span class="asBracket">}</span>
+
+        <span class="asDoc">/**
+         * Функция служит для начала загрузки данных с сервера
+         * @param filter Объект хранящий список условий которые могут быть опционально наложены на отбираемые сервером записи
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> DS_Load <span class="asBracket">(</span>filter <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;DS_Load&quot;</span><span class="asBracket">)</span>;
+            filterCondition  <span class="asOperator">=</span> filter;
+            lastCallFunctionName <span class="asOperator">=</span> HessianDataSetEvent.CMD_LOADDATASET;
+            <span class="asVar">var</span> token<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span>  service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.send <span class="asBracket">(</span>datasetName, filter<span class="asBracket">)</span>;
+            token.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+            fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_STARTING, <span class="asString">&quot;HessianDataSet::DS_Load&quot;</span><span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- DS_Load --
+</span>        
+        <span class="asDoc">/**
+         * Функция выполняющая генерацию события HessianDataSetEvent - изменен набор данных
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> fireDataSetReady <span class="asBracket">(</span>status <span class="asOperator">:</span> String, msg <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            dispatchEvent<span class="asBracket">(</span><span class="asReserved">new</span> HessianDataSetEvent<span class="asBracket">(</span>status, msg,  lastCallFunctionName, datasetName<span class="asBracket">))</span>; 
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         * Функция выполняющая генерацию события HessianScrollEvent - перемещен указатель на текущую запись
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> fireDataSetScrolled <span class="asBracket">(</span>scrollKind <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            dispatchEvent<span class="asBracket">(</span><span class="asReserved">new</span> HessianScrollEvent<span class="asBracket">(</span>scrollKind<span class="asBracket">))</span>; 
+        <span class="asBracket">}</span>
+
+        
+        <span class="asDoc">/**
+         * Служебная функция обработчик события изменен номер записи принимает события от присоединенного DataGrid
+         */</span> 
+        <span class="asReserved">private</span> <span class="asFunction">function</span> onChangeDataGridRow <span class="asBracket">(</span>e<span class="asOperator">:</span> ListEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>grid.selectedIndex <span class="asOperator">&gt;=</span> getRecordCount<span class="asBracket">()</span> <span class="asOperator">||</span> grid.selectedIndex <span class="asOperator">&lt;</span> 0<span class="asBracket">){</span>
+                <span class="asReserved">return</span>;
+            <span class="asBracket">}</span>
+            currentRowIdx <span class="asOperator">=</span> grid.selectedIndex;
+        <span class="asBracket">}</span><span class="asComment">// end of -- onChangeDataGridRow --
+</span>        
+        
+        <span class="asDoc">/**
+         * Ссылка на объект DataGrid который присоединен к источнику данных. Наличие подобного DataGrid не обязательно
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> grid <span class="asOperator">:</span> DataGrid <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        
+        <span class="asDoc">/**
+         * Функция служит для присоединения к набору данных DataGrid в котором эти записи отображаются
+         * @param attachDataGrid ссылка на объект DataGrid
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> attachDataGrid <span class="asBracket">(</span>grid <span class="asOperator">:</span> DataGrid<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">this</span>.grid <span class="asOperator">=</span> grid;
+            grid.addEventListener<span class="asBracket">(</span>ListEvent.CHANGE, onChangeDataGridRow<span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>navigator<span class="asBracket">){</span>
+                <span class="asComment">//navigator.dataGrid = grid;
+</span>                navigator.dataSource <span class="asOperator">=</span> <span class="asReserved">this</span>;
+            <span class="asBracket">}</span>
+        <span class="asBracket">}</span>
+        <span class="asDoc">/**
+         * Ссылка на объект DataNavigator присоединенный к набору данных. Наличие подобного DataNavigator не обязательно
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> navigator<span class="asOperator">:</span> DataNavigator <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asDoc">/**
+         * Функция служит для присоединения к набору данных элемента управления DataNavigator, служщего для навигации по записям
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> attachNavigator <span class="asBracket">(</span>navigator <span class="asOperator">:</span> DataNavigator<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">this</span>.navigator <span class="asOperator">=</span> navigator;
+            <span class="asReserved">this</span>.navigator.dataSource <span class="asOperator">=</span> <span class="asReserved">this</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>grid<span class="asBracket">){</span>
+                <span class="asComment">//navigator.dataGrid = grid;
+</span>            <span class="asBracket">}</span>
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         * Служебная функция выполняет поиск в списке правил правила присоединенного к определенному элементу управления
+         * @param arrRules Массив правил. Каждое правило представлено объектом задающим закон по которому отображаются элементы управления на поля записи
+         * @param control Ссылка на элемент управления
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> findRuleByControl<span class="asBracket">(</span>arrRules <span class="asOperator">:</span> Array, control <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span>Object<span class="asBracket">{</span>
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> arrRules.length; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>arrRules<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;control&apos;</span><span class="asBracket">]</span> <span class="asOperator">==</span> control <span class="asOperator">||</span> arrRules<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;dataset&apos;</span><span class="asBracket">]</span> <span class="asOperator">==</span> control<span class="asBracket">)</span>
+                    <span class="asReserved">return</span> arrRules<span class="asBracket">[</span>i<span class="asBracket">]</span>;
+            <span class="asReserved">return</span> <span class="asReserved">null</span>;
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> funcOnChangeLinkedUIControl<span class="asBracket">(</span>eee <span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> rule <span class="asOperator">:</span> Object <span class="asOperator">=</span> findRuleByControl<span class="asBracket">(</span>dataBindingSchema, eee.target<span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>isInEditState <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>getRecordCount<span class="asBracket">()</span> <span class="asOperator">&gt;</span> 0<span class="asBracket">)</span>
+                    editRecord<span class="asBracket">()</span>;
+                <span class="asReserved">else</span>
+                    appendRecord<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            currentRow<span class="asBracket">[</span>rule<span class="asBracket">[</span><span class="asString">&apos;field&apos;</span><span class="asBracket">]]</span> <span class="asOperator">=</span> rule<span class="asBracket">[</span><span class="asString">&apos;control&apos;</span><span class="asBracket">][</span>rule<span class="asBracket">[</span><span class="asString">&apos;property&apos;</span><span class="asBracket">]]</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>grid <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">)</span>
+                grid.selectedItem <span class="asOperator">=</span> currentRow;
+            fireDataSetScrolled<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_MODIFY<span class="asBracket">)</span>;                            
+        <span class="asBracket">}</span>
+
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> funcOnChangeLinkedDataSet<span class="asBracket">(</span>eee <span class="asOperator">:</span> HessianScrollEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span>;<span class="asComment">// from event dispatcher
+</span>            <span class="asVar">var</span> rule <span class="asOperator">:</span> Object <span class="asOperator">=</span> findRuleByControl<span class="asBracket">(</span>dataBindingSchema, eee.target<span class="asBracket">)</span>;                        
+            <span class="asVar">var</span> disp_trigger <span class="asOperator">:</span> HessianDataSet <span class="asOperator">=</span> HessianDataSet<span class="asBracket">(</span>rule<span class="asBracket">[</span><span class="asString">&apos;dataset&apos;</span><span class="asBracket">])</span>;                                            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>disp_trigger.isInEditState<span class="asBracket">)</span> <span class="asReserved">return</span>;
+            
+
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;funcOnChangeLinkedDataSet (field_local=&quot;</span><span class="asOperator">+</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_local&apos;</span><span class="asBracket">]</span><span class="asOperator">+</span>
+            <span class="asString">&quot;,field_target=&quot;</span><span class="asOperator">+</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_target&apos;</span><span class="asBracket">]</span><span class="asOperator">+</span>
+            <span class="asString">&quot;,field_target_fine=&quot;</span><span class="asOperator">+</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_target_fine&apos;</span><span class="asBracket">]</span><span class="asOperator">+</span><span class="asString">&quot;, isLocateEvent=&quot;</span><span class="asOperator">+</span>disp_trigger.isLocateEvent<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>isInEditState <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>getRecordCount<span class="asBracket">()</span> <span class="asOperator">&gt;</span> 0<span class="asBracket">)</span>
+                    editRecord<span class="asBracket">()</span>;
+                <span class="asReserved">else</span>
+                    appendRecord<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// if not in edit state yet
+</span>            currentRow<span class="asBracket">[</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_local&apos;</span><span class="asBracket">]]</span> <span class="asOperator">=</span> disp_trigger.currentRow <span class="asBracket">[</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_target&apos;</span><span class="asBracket">]]</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_local_fine&apos;</span><span class="asBracket">]</span> <span class="asOperator">!=</span> <span class="asReserved">null</span> <span class="asOperator">&amp;&amp;</span> rule<span class="asBracket">[</span><span class="asString">&apos;field_target_fine&apos;</span><span class="asBracket">]</span> <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                currentRow<span class="asBracket">[</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_local_fine&apos;</span><span class="asBracket">]]</span> <span class="asOperator">=</span> disp_trigger.currentRow <span class="asBracket">[</span>rule<span class="asBracket">[</span><span class="asString">&apos;field_target_fine&apos;</span><span class="asBracket">]]</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>grid <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">)</span>
+                grid.selectedItem <span class="asOperator">=</span> currentRow;
+            fireDataSetScrolled<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_MODIFY<span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">// inner func
+</span>                                        
+                    
+        <span class="asDoc">/**
+         * Служебная переменная в которой хранится набор правил преобразования элементов управления в поля записи
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span>  dataBindingSchema <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+        
+        <span class="asDoc">/**
+         * Функция служит для того чтобы указать правила привязки элементов управления к полям записи
+         */</span> 
+        <span class="asReserved">public</span>  <span class="asFunction">function</span> setDataBinding <span class="asBracket">(</span>_a <span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            dataBindingSchema <span class="asOperator">=</span> _a;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int  <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> dataBindingSchema.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> rule <span class="asOperator">:</span> Object <span class="asOperator">=</span> dataBindingSchema<span class="asBracket">[</span>i<span class="asBracket">]</span>;                
+                <span class="asReserved">if</span> <span class="asBracket">(</span>rule.hasOwnProperty<span class="asBracket">(</span><span class="asString">&apos;property&apos;</span><span class="asBracket">)){</span>
+                    <span class="asVar">var</span> disp <span class="asOperator">:</span> EventDispatcher <span class="asOperator">=</span> EventDispatcher<span class="asBracket">(</span>rule<span class="asBracket">[</span><span class="asString">&apos;control&apos;</span><span class="asBracket">])</span>;
+                    disp.addEventListener <span class="asBracket">(</span>
+                    flash.events.Event.CHANGE , funcOnChangeLinkedUIControl<span class="asBracket">)</span>;
+                <span class="asBracket">}</span><span class="asReserved">else</span><span class="asBracket">{</span>
+                    <span class="asComment">// особые варианты - сначала lookup
+</span>                    <span class="asVar">var</span> disp_dataset <span class="asOperator">:</span> HessianDataSet <span class="asOperator">=</span> HessianDataSet<span class="asBracket">(</span>rule<span class="asBracket">[</span><span class="asString">&apos;dataset&apos;</span><span class="asBracket">])</span>;                    
+                    disp_dataset.addEventListener<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_SCROLL, funcOnChangeLinkedDataSet    <span class="asBracket">)</span>;<span class="asComment">//addEventListener
+</span>                <span class="asBracket">}</span><span class="asComment">// if not simple control
+</span>            <span class="asBracket">}</span><span class="asComment">// for
+</span>            
+        <span class="asBracket">}</span><span class="asComment">// end of -- setDataBinding -- 
+</span>        
+
+    
+        <span class="asDoc">/**
+         * Функция служит для того чтобы указать что некоторая функция должна быть ывзвана в том случае,
+         * если  два набора данных уже содержит информацию
+         * если же набор данных еще не был загружен то функция будет вызвана как только это произойдет
+         * @param func Функция, которая будет вызвана как только набор данных будет загружен с сервера
+         * @param h_1 Первый набор данных
+         * @param h_2 Второй набор данных
+         * @param param Пользовательский объект передаваемый функции func
+         */</span>         
+        <span class="asReserved">public</span> <span class="asFunction">function</span> setTaskWheenDataSetsBeReady <span class="asBracket">(</span>func <span class="asOperator">:</span> Function, h_1 <span class="asOperator">:</span> HessianDataSet, h_2 <span class="asOperator">:</span> HessianDataSet, param <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>
+            <span class="asBracket">(</span>h_1.rawData <span class="asOperator">!=</span> <span class="asReserved">null</span> <span class="asOperator">&amp;&amp;</span> h_2.rawData <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">)</span>
+            <span class="asOperator">&amp;&amp;</span>
+            <span class="asBracket">(</span>h_1.rawData.ready  <span class="asOperator">&amp;&amp;</span> h_2.rawData.ready<span class="asBracket">)</span>            
+            <span class="asBracket">){</span>
+                func.call<span class="asBracket">(</span><span class="asReserved">null</span>, param<span class="asBracket">)</span>;
+                <span class="asReserved">return</span>;
+            <span class="asBracket">}</span>
+            setTimeout<span class="asBracket">(</span>setTaskWheenDataSetsBeReady, 200, func, h_1, h_2, param<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asDoc">/**
+         * Функция вызывается в том случае когда необходимо выполнить перенос информации из служебного массива rawData
+         * внутрь элементов управления
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> dataBindingToUI <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;dataBindingToUI&quot;</span><span class="asBracket">)</span>;
+            <span class="asVar">var</span> __this <span class="asOperator">:</span> HessianDataSet <span class="asOperator">=</span> <span class="asReserved">this</span>;
+            inDataBindingHandler <span class="asOperator">=</span> <span class="asReserved">true</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> dataBindingSchema.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> rule <span class="asOperator">:</span> Object <span class="asOperator">=</span> dataBindingSchema<span class="asBracket">[</span>i<span class="asBracket">]</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>rule <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">continue</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>rule.hasOwnProperty<span class="asBracket">(</span><span class="asString">&apos;property&apos;</span><span class="asBracket">)){</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>getRecordCount<span class="asBracket">()</span> <span class="asOperator">&gt;</span> 0<span class="asBracket">)</span>
+                        rule<span class="asBracket">[</span><span class="asString">&apos;control&apos;</span><span class="asBracket">][</span>rule<span class="asBracket">[</span><span class="asString">&apos;property&apos;</span><span class="asBracket">]]</span> <span class="asOperator">=</span> currentRow <span class="asBracket">[</span>rule <span class="asBracket">[</span><span class="asString">&apos;field&apos;</span><span class="asBracket">]]</span>;
+                    <span class="asReserved">else</span>
+                        rule<span class="asBracket">[</span><span class="asString">&apos;control&apos;</span><span class="asBracket">][</span>rule<span class="asBracket">[</span><span class="asString">&apos;property&apos;</span><span class="asBracket">]]</span> <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                <span class="asBracket">}</span><span class="asReserved">else</span><span class="asBracket">{</span>
+                    <span class="asComment">// особые варианты - сначала lookup
+</span>                    <span class="asVar">var</span> hsd <span class="asOperator">:</span> HessianDataSet <span class="asOperator">=</span> HessianDataSet<span class="asBracket">(</span>rule<span class="asBracket">[</span><span class="asString">&apos;dataset&apos;</span><span class="asBracket">])</span>;
+                    setTaskWheenDataSetsBeReady <span class="asBracket">(</span>
+                        <span class="asFunction">function</span> <span class="asBracket">(</span>context <span class="asOperator">:</span> Object<span class="asBracket">)</span> <span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                          <span class="asVar">var</span> rule <span class="asOperator">:</span> Object <span class="asOperator">=</span> findRuleByControl<span class="asBracket">(</span>dataBindingSchema, context<span class="asBracket">)</span>;                          
+                          <span class="asVar">var</span> field_local <span class="asOperator">:</span> String <span class="asOperator">=</span>  rule<span class="asBracket">[</span><span class="asString">&apos;field_local&apos;</span><span class="asBracket">]</span>;
+                          <span class="asVar">var</span> field_target <span class="asOperator">:</span> String <span class="asOperator">=</span>  rule<span class="asBracket">[</span><span class="asString">&apos;field_target&apos;</span><span class="asBracket">]</span>;
+                          <span class="asVar">var</span> value_local <span class="asOperator">:</span> Object <span class="asOperator">=</span> currentRow <span class="asBracket">[</span>field_local<span class="asBracket">]</span>;
+                          <span class="asVar">var</span> sts <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> context.locate<span class="asBracket">(</span>field_target, value_local<span class="asBracket">)</span>;
+                      <span class="asBracket">}</span>,
+                      <span class="asReserved">this</span>,
+                      hsd,
+                      hsd<span class="asBracket">)</span>;
+                <span class="asBracket">}</span><span class="asComment">//else
+</span>            <span class="asBracket">}</span><span class="asComment">// for
+</span>            inDataBindingHandler <span class="asOperator">=</span> <span class="asReserved">false</span>;            
+        <span class="asBracket">}</span><span class="asComment">// end of -- dataBindingToUI -- 
+</span>
+        <span class="asDoc">/**
+         * Функция служит для переноса информации из элементов управления внутрь служебного массива rawData
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> dataBindingFromUI <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;dataBindingFromUI&quot;</span><span class="asBracket">)</span>;            
+            inDataBindingHandler <span class="asOperator">=</span> <span class="asReserved">true</span>;            
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> dataBindingSchema.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> rule <span class="asOperator">:</span> Object <span class="asOperator">=</span> dataBindingSchema<span class="asBracket">[</span>i<span class="asBracket">]</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>rule <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">continue</span>;                
+                <span class="asReserved">if</span> <span class="asBracket">(</span>rule.hasOwnProperty<span class="asBracket">(</span><span class="asString">&apos;property&apos;</span><span class="asBracket">)){</span>
+                    currentRow <span class="asBracket">[</span>rule <span class="asBracket">[</span><span class="asString">&apos;field&apos;</span><span class="asBracket">]]</span> <span class="asOperator">=</span> rule<span class="asBracket">[</span><span class="asString">&apos;control&apos;</span><span class="asBracket">][</span>rule<span class="asBracket">[</span><span class="asString">&apos;property&apos;</span><span class="asBracket">]]</span>;
+                <span class="asBracket">}</span>
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                    <span class="asComment">// особые варианты - сначала lookup
+</span>                    <span class="asVar">var</span> hsd <span class="asOperator">:</span> HessianDataSet <span class="asOperator">=</span> HessianDataSet<span class="asBracket">(</span>rule<span class="asBracket">[</span><span class="asString">&apos;dataset&apos;</span><span class="asBracket">])</span>;
+                    <span class="asVar">var</span> field_local <span class="asOperator">:</span> String <span class="asOperator">=</span>  rule<span class="asBracket">[</span><span class="asString">&apos;field_local&apos;</span><span class="asBracket">]</span>;
+                    <span class="asVar">var</span> field_target <span class="asOperator">:</span> String <span class="asOperator">=</span>  rule<span class="asBracket">[</span><span class="asString">&apos;field_target&apos;</span><span class="asBracket">]</span>;
+                    <span class="asVar">var</span> value_target <span class="asOperator">:</span> Object <span class="asOperator">=</span> hsd.currentRow <span class="asBracket">[</span>field_target<span class="asBracket">]</span>;
+                    currentRow <span class="asBracket">[</span>field_local<span class="asBracket">]</span> <span class="asOperator">=</span> value_target;
+                <span class="asBracket">}</span><span class="asComment">//else
+</span>            <span class="asBracket">}</span><span class="asComment">// for 
+</span>            inDataBindingHandler <span class="asOperator">=</span> <span class="asReserved">false</span>;                        
+        <span class="asBracket">}</span><span class="asComment">// end of --  dataBindingFromUI --
+</span>        
+        
+        <span class="asDoc">/**
+         * Служебная функция возвращает текущую запись в виде массива, необходима из-за особенностей передачи property с помощью hesian
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> currentRecordAsHashMap <span class="asBracket">()</span><span class="asOperator">:</span>Object <span class="asBracket">{</span>
+            <span class="asVar">var</span> obi <span class="asOperator">:</span>Object <span class="asOperator">=</span><span class="asReserved">new</span> Object <span class="asBracket">()</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> key <span class="asOperator">:</span> Object <span class="asReserved">in</span> currentRow<span class="asBracket">)</span> 
+                obi<span class="asBracket">[</span>key<span class="asBracket">]</span> <span class="asOperator">=</span> currentRow <span class="asBracket">[</span>key<span class="asBracket">]</span>;
+            <span class="asReserved">return</span> obi;
+        <span class="asBracket">}</span><span class="asComment">// end of -- currentRecordAsHashMap --
+</span>        
+        <span class="asComment">// -------------------- обработка событий -----------------------------
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для перезагрузки записи (данные будут взяты с сервера) с указанным идентификатором
+         * @param id идентификатор записи
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> reloadRecordById <span class="asBracket">(</span>id <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;reloadRecordById (id = &quot;</span><span class="asOperator">+</span>id<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span>;            
+            lastCallFunctionName <span class="asOperator">=</span> HessianDataSetEvent.CMD_LOADRECORD;
+            fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_STARTING, <span class="asString">&quot;HessianDataSet::reloadRecordById&quot;</span><span class="asBracket">)</span>;
+            <span class="asVar">var</span> token<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span>  service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.send <span class="asBracket">(</span>datasetName, id<span class="asBracket">)</span>;
+            token.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- appendRecord --
+</span>        
+        
+        <span class="asDoc">/**
+         * Функция служит для добавления новой записи в конец списка
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> appendRecord <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;appendRecord (isInEditState = &quot;</span><span class="asOperator">+</span>isInEditState<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>isInEditState<span class="asBracket">)</span> <span class="asReserved">return</span>;<span class="asComment">// no 2times append allowed
+</span>            <span class="asReserved">if</span> <span class="asBracket">(</span>rawData <span class="asOperator">==</span> <span class="asReserved">null</span> <span class="asOperator">||</span> rawData.ready <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">)</span> <span class="asReserved">return</span>;
+            rawData.records.addItem<span class="asBracket">(</span>rawData.header.createEmptyRecord <span class="asBracket">()</span>    <span class="asBracket">)</span>;
+            rawData.records_status.addItem<span class="asBracket">(</span><span class="asString">&quot;new&quot;</span><span class="asBracket">)</span>;            
+            currentRowIdx <span class="asOperator">=</span> rawData.records.length <span class="asOperator">-</span> 1;
+            isInEditState <span class="asOperator">=</span> <span class="asReserved">true</span>;
+            fireDataSetScrolled <span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_APPEND<span class="asBracket">)</span>;            
+        <span class="asBracket">}</span><span class="asComment">// end of -- appendRecord --
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для удаления текущей записи. Запрос на удаление отправляется на сервер и только после получения подтверждения того,
+         * что запись была действительно удалена, удаление выполняется на стороне клиента
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> deleteRecord <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;deleteRecord (isInEditState = &quot;</span><span class="asOperator">+</span>isInEditState<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;                        
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>currentRowIdx <span class="asOperator">&gt;=</span> 0 <span class="asOperator">&amp;&amp;</span> currentRowIdx <span class="asOperator">&lt;</span> rawData.records.length<span class="asBracket">){</span>
+                lastCallFunctionName <span class="asOperator">=</span> HessianDataSetEvent.CMD_DELETERECORD;
+                fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_STARTING, <span class="asString">&quot;HessianDataSet::deleteRecord&quot;</span><span class="asBracket">)</span>;
+                <span class="asVar">var</span> token<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span>  service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.send <span class="asBracket">(</span>datasetName, currentRecordAsHashMap <span class="asBracket">())</span>;
+                token.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+                fireDataSetScrolled <span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_DELETE<span class="asBracket">)</span>;                
+            <span class="asBracket">}</span>
+        <span class="asBracket">}</span><span class="asComment">// end of -- deleteRecord --
+</span>        
+        <span class="asDoc">/**
+         * Функция выполняет переход записи в режим редактирования
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> editRecord <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;editRecord (isInEditState = &quot;</span><span class="asOperator">+</span>isInEditState<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;                                    
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>currentRowIdx <span class="asOperator">&gt;=</span> 0 <span class="asOperator">&amp;&amp;</span> currentRowIdx <span class="asOperator">&lt;</span> rawData.records.length<span class="asBracket">){</span>
+                isInEditState <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                rawData.records_status.setItemAt<span class="asBracket">(</span><span class="asString">&quot;edit&quot;</span>, currentRowIdx<span class="asBracket">)</span>;
+                fireDataSetScrolled <span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_EDIT<span class="asBracket">)</span>;                
+            <span class="asBracket">}</span>            
+        <span class="asBracket">}</span><span class="asComment">// end of -- editRecord --
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для сохранения текущей записи. В зависимости от того была ли данная запись добавлена или 
+         * редактируется на сервере будет выполнена либо команда INSERT либо команда UPDATE
+         * До получения подтверждения с сервера об успешности изменения данных никакие модификации на стороне клиента не выполняются
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> postRecord <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;postRecord (isInEditState = &quot;</span><span class="asOperator">+</span>isInEditState<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span>;
+                        
+            <span class="asReserved">if</span> <span class="asBracket">(</span>currentRowIdx <span class="asOperator">&gt;=</span> 0 <span class="asOperator">&amp;&amp;</span> currentRowIdx <span class="asOperator">&lt;</span> rawData.records.length<span class="asBracket">){</span>
+                dataBindingFromUI<span class="asBracket">()</span>;                
+                lastCallFunctionName <span class="asOperator">=</span> HessianDataSetEvent.CMD_POSTRECORD;
+                fireDataSetReady <span class="asBracket">(</span>HessianDataSetEvent.STATUS_STARTING,  <span class="asString">&quot;HessianDataSet::postRecord&quot;</span><span class="asBracket">)</span>;
+                <span class="asVar">var</span> token<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span> service<span class="asBracket">[</span>lastCallFunctionName<span class="asBracket">]</span>.send <span class="asBracket">(</span>datasetName, currentRecordAsHashMap<span class="asBracket">())</span>;
+                token.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;                
+                fireDataSetScrolled <span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_POST<span class="asBracket">)</span>;                                
+            <span class="asBracket">}</span>            
+        <span class="asBracket">}</span><span class="asComment">// end of -- postRecord --
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для отмены текщуего редактирования. Запись возвращается в исходное состояние,то которое было 
+         * до изменения любых из ее полей. Если запись была добавлена но не сохранена на сервер, то запись удаляется из
+         * внутренного набора данных rawData
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> cancelRecord <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;cancelRecord (isInEditState = &quot;</span><span class="asOperator">+</span>isInEditState<span class="asOperator">+</span><span class="asString">&quot;)&quot;</span><span class="asBracket">)</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span>;
+            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>currentRowIdx <span class="asOperator">&gt;=</span> 0 <span class="asOperator">&amp;&amp;</span> currentRowIdx <span class="asOperator">&lt;</span> rawData.records.length<span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>rawData.records_status<span class="asBracket">[</span>currentRowIdx<span class="asBracket">]</span> <span class="asOperator">==</span> <span class="asString">&quot;new&quot;</span><span class="asBracket">){</span>
+                    rawData.records.removeItemAt<span class="asBracket">(</span>currentRowIdx<span class="asBracket">)</span>;
+                    rawData.records_status.removeItemAt<span class="asBracket">(</span>currentRowIdx<span class="asBracket">)</span>;                    
+                    isInEditState <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                    dataBindingToUI<span class="asBracket">()</span>;
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>grid <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">)</span>
+                        grid.selectedIndex <span class="asOperator">=</span> currentRowIdx;
+                <span class="asBracket">}</span>
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                    <span class="asVar">var</span> ba <span class="asOperator">:</span> ByteArray <span class="asOperator">=</span> <span class="asReserved">new</span> ByteArray <span class="asBracket">()</span>;
+                    ba.writeObject<span class="asBracket">(</span>currentClone<span class="asBracket">)</span>;
+                    ba.position <span class="asOperator">=</span> 0;
+                    currentRow <span class="asOperator">=</span> ba.readObject<span class="asBracket">()</span>;
+                    ba.length <span class="asOperator">=</span> 0;
+                    isInEditState <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                    dataBindingToUI<span class="asBracket">()</span>;
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>grid <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">)</span>
+                        grid.selectedIndex <span class="asOperator">=</span> currentRowIdx;
+                <span class="asBracket">}</span>
+                fireDataSetScrolled <span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_CANCEL<span class="asBracket">)</span>;                
+            <span class="asBracket">}</span>            
+        <span class="asBracket">}</span><span class="asComment">//end of -- cancelRecord --
+</span>        
+        
+        <span class="asDoc">/**
+         * Служебная переменная хранит значение последнего примененного для данного набора данных фильтра
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> filterCondition <span class="asOperator">:</span> Object <span class="asOperator">=</span> <span class="asReserved">new</span> Object <span class="asBracket">()</span>;
+        <span class="asDoc">/**
+         * Функция служит для загрузки набора данных с сервера. Записи загружаются на основании того фильтра который был применен в последний раз
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> reloadDataSet <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            DS_Load <span class="asBracket">(</span>filterCondition<span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">//end of -- reloadDataSet --
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для поиска в наборе данных той записи которая удовлетворяет некоторому условию
+         * @param fieldName Имя поля для которого следует выполнить поиск
+         * @fieldValue Значение которое нужно найти
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> locate <span class="asBracket">(</span>fieldName <span class="asOperator">:</span> String, fieldValue <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;locate (fieldName = &quot;</span><span class="asOperator">+</span>fieldName<span class="asOperator">+</span><span class="asString">&quot;, fieldValue=&quot;</span><span class="asOperator">+</span>fieldValue<span class="asOperator">+</span><span class="asString">&quot;) &quot;</span><span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>isInEditState<span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">false</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>inDataBindingHandler<span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">false</span>;            
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int  <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> rawData.records.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>rawData.records<span class="asBracket">[</span>i<span class="asBracket">][</span>fieldName<span class="asBracket">]</span> <span class="asOperator">==</span> fieldValue<span class="asBracket">){</span>
+                    isLocateEvent <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                    currentRowIdx <span class="asOperator">=</span> i; 
+                    isLocateEvent <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                    <span class="asReserved">return</span> <span class="asReserved">true</span>;
+                    
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> <span class="asReserved">false</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- locate --
+</span>        
+    <span class="asBracket">}</span><span class="asComment">// end of CLASS
+</span><span class="asBracket">}</span><span class="asComment">// end of PACKAE</span></pre></body>
+</html>

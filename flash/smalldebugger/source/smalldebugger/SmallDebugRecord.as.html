@@ -1,0 +1,88 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>SmallDebugRecord.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asDoc">/**
+ * SmallDebugServer (http://black-zorro.com/mediawiki/proj_smallflexdebugger)
+ * @author Nikolai Gishkevich aka black zorro
+*/</span>
+<span class="asPackage">package</span> smalldebugger
+<span class="asBracket">{</span>
+    
+    <span class="asReserved">import</span> flash.utils.getTimer;
+    <span class="asReserved">import</span> smalldebugger.SmallDebugServer;
+    
+    <span class="asDoc">/**
+     * Объект запись содержит сведения о происшествии - пришедшем debug-сообщении
+     */</span>
+    <span class="asReserved">public</span> <span class="asClass">class</span> SmallDebugRecord
+    <span class="asBracket">{</span>
+        <span class="asDoc">/**
+         * Тип сообщения (warn , debug, info, fatal, error)
+         */</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_kind<span class="asOperator">:</span>String;
+        <span class="asDoc">/**
+         * Собственно текст сообщения
+        */</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_message<span class="asOperator">:</span>String;
+        <span class="asDoc">/**
+         * Функция выбросившая сообщение
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_function<span class="asOperator">:</span>String;
+        <span class="asDoc">/**
+         * Класс выбросивший сообщение
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_class  <span class="asOperator">:</span> String;
+        <span class="asDoc">/**
+         * Дата-время прихода сообщения
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_datetime_internal <span class="asOperator">:</span> Date;
+        <span class="asDoc">/**
+         * Массив с stacktrace-ом вызовов приведших к сообщению
+         */</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_array <span class="asOperator">:</span> Array;
+        <span class="asDoc">/**
+         * Дата-время форматированное когда произошло сообщение
+        */</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_datetime <span class="asOperator">:</span> String;        
+        <span class="asDoc">/**
+         * Разница во времени межуд этим сообщением и самым первым пришедшим от сервера
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_delta <span class="asOperator">:</span> uint;
+        <span class="asDoc">/**
+         * Порядковый номер сообщения
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_num <span class="asOperator">:</span> uint;
+        
+        <span class="asDoc">/**
+         * Пользовательские параметры - объекты
+         */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> a_params <span class="asOperator">:</span> XML; 
+        
+        <span class="asDoc">/**
+         * Конструктор на основании переданных данных заполняет поля класса
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> SmallDebugRecord <span class="asBracket">(</span>
+            server <span class="asOperator">:</span> SmallDebugServer,
+            _kind <span class="asOperator">:</span> String, _message <span class="asOperator">:</span> String, _function <span class="asOperator">:</span> String, _class <span class="asOperator">:</span> String, _array <span class="asOperator">:</span> Array, _params <span class="asOperator">:</span> XML
+        <span class="asBracket">){</span>
+            a_datetime_internal <span class="asOperator">=</span> <span class="asReserved">new</span> Date <span class="asBracket">()</span>;
+            a_datetime <span class="asOperator">=</span> a_datetime_internal.toTimeString<span class="asBracket">()</span>;
+            a_datetime <span class="asOperator">=</span> a_datetime.substr<span class="asBracket">(</span>0, a_datetime.indexOf<span class="asBracket">(</span><span class="asString">&quot; &quot;</span><span class="asBracket">))</span>;
+            a_kind <span class="asOperator">=</span> _kind;
+            a_message <span class="asOperator">=</span> _message;
+            a_function <span class="asOperator">=</span> _function;
+            a_class <span class="asOperator">=</span> _class;
+            a_array <span class="asOperator">=</span> _array;
+            a_params <span class="asOperator">=</span> _params;
+            a_delta <span class="asOperator">=</span> getTimer<span class="asBracket">()</span> <span class="asOperator">-</span> server.loc_startTimer; 
+            a_num <span class="asOperator">=</span> server.loc_currentDebugMsgNum;
+        <span class="asBracket">}</span>
+    <span class="asBracket">}</span>
+<span class="asBracket">}</span></pre></body>
+</html>

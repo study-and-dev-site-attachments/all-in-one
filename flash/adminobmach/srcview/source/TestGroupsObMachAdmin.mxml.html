@@ -1,0 +1,235 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>TestGroupsObMachAdmin.mxml</title>
+<link rel="stylesheet" type="text/css" href="../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:Box</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; width=&quot;<span class="mxmlString">1024</span>&quot; height=&quot;<span class="mxmlString">768</span>&quot;
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    creationComplete=&quot;onInitApp<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;
+    xmlns:user = &quot;<span class="mxmlString">user_components.*</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Style</span> source=&quot;<span class="mxmlString">/assets/styles.css</span>&quot; <span class="mxmlTag">/&gt;</span>
+
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+        <span class="asReserved">import</span> logic.GlobalParams;
+        <span class="asReserved">import</span> mx.core.Application;
+        <span class="asReserved">import</span> mx.managers.PopUpManager;
+        <span class="asReserved">import</span> user_components.SimpleClockPopup;
+        <span class="asReserved">import</span> logic.IPopupWhileLoadingControl;
+        <span class="asReserved">import</span> logic.HessianDataSetEvent;
+        <span class="asReserved">import</span> hessian.client.HessianOperation;
+        <span class="asReserved">import</span> mx.events.ListEvent;
+        <span class="asReserved">import</span> mx.controls.Alert;
+        <span class="asReserved">import</span> logic.HessianDataSet;
+        <span class="asReserved">import</span> hessian.client.HessianService;
+        
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">private</span> <span class="asVar">var</span> dataset_tg<span class="asOperator">:</span>HessianDataSet;
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>        
+        <span class="asReserved">private</span> <span class="asVar">var</span> dataset_users<span class="asOperator">:</span>HessianDataSet;
+         
+         
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">private</span> <span class="asVar">var</span> sandboxType <span class="asOperator">:</span> String;
+
+         
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> onDataSetReady <span class="asBracket">(</span>e<span class="asOperator">:</span> HessianDataSetEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            
+        <span class="asBracket">}</span>
+        
+        <span class="asReserved">private</span> <span class="asFunction">function</span> onInitApp <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+           <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.REMOTE<span class="asBracket">)</span>
+                sandboxType <span class="asOperator">=</span> <span class="asString">&quot;REMOTE&quot;</span>;
+           <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.LOCAL_WITH_FILE<span class="asBracket">)</span>
+                sandboxType <span class="asOperator">=</span> <span class="asString">&quot;LOCAL_WITH_FILE&quot;</span>;
+           <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.LOCAL_WITH_NETWORK<span class="asBracket">)</span>
+                sandboxType <span class="asOperator">=</span> <span class="asString">&quot;LOCAL_WITH_NETWORK&quot;</span>;
+           <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.LOCAL_TRUSTED<span class="asBracket">)</span>
+                sandboxType <span class="asOperator">=</span> <span class="asString">&quot;LOCAL_TRUSTED&quot;</span>;
+
+            <span class="asComment">// ---------------- users -----------------------
+</span>            
+            <span class="asVar">var</span> dlg_shower  <span class="asOperator">:</span> IPopupWhileLoadingControl <span class="asOperator">=</span> <span class="asReserved">new</span> SimpleClockPopup <span class="asBracket">()</span>;
+            
+            dataset_users <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSet <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;admin&quot;</span><span class="asBracket">)</span>, <span class="asString">&quot;ob_user_reference&quot;</span>, <span class="asReserved">null</span>,dlg_shower<span class="asBracket">)</span>;
+            dataset_users.addEventListener<span class="asBracket">(</span>HessianDataSetEvent.HESSIAN_CALL, onDataSetReady<span class="asBracket">)</span>;
+            dataset_users.attachDataGrid<span class="asBracket">(</span>grid_owners<span class="asBracket">)</span>;
+            
+            <span class="asComment">// ------------------- testgroups --------------------------
+</span>            dataset_tg <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSet <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;admin&quot;</span><span class="asBracket">)</span>, <span class="asString">&quot;ob_testgroup&quot;</span>, <span class="asReserved">null</span>, dlg_shower<span class="asBracket">)</span>;
+            dataset_tg.attachDataGrid <span class="asBracket">(</span>grid_test_groups<span class="asBracket">)</span>;
+            dataset_tg.attachNavigator<span class="asBracket">(</span>nav_test_groups<span class="asBracket">)</span>;
+            dataset_tg.addEventListener<span class="asBracket">(</span>HessianDataSetEvent.HESSIAN_CALL, onDataSetReady<span class="asBracket">)</span>;
+            dataset_tg.setDataBinding <span class="asBracket">(</span>
+            <span class="asBracket">[</span>
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> grid_owners , dataset<span class="asOperator">:</span> dataset_users, field_local <span class="asOperator">:</span> <span class="asString">&apos;UserID&apos;</span>, field_target <span class="asOperator">:</span> <span class="asString">&apos;UserID&apos;</span>, field_target_fine <span class="asOperator">:</span> <span class="asString">&apos;UserFIO&apos;</span>, field_local_fine <span class="asOperator">:</span> <span class="asString">&apos;UserFIO&apos;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> TestGroupName, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span> , field<span class="asOperator">:</span> <span class="asString">&quot;TestGroupName&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> TestGroupComment, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;TestGroupComment&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> TestGroupURLInfo, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;TestGroupURLInfo&quot;</span><span class="asBracket">}</span>,                
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> TableNamesList, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;TableNamesList&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> HelpURL, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;HelpURL&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> ModifyDate, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;ModifyDate&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_host_1, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_host_1&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_user_1, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_user_1&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_password_1, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_password_1&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_db_1, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_db_1&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_host_2, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_host_2&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_user_2, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_user_2&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_password_2, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_password_2&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> param_db_2, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;param_db_2&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> PrefixForDB2, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;PrefixForDB2&quot;</span><span class="asBracket">}</span>,
+                <span class="asBracket">{</span>control<span class="asOperator">:</span> superTimeLimit, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;superTimeLimit&quot;</span><span class="asBracket">}</span>,                
+                
+            <span class="asBracket">]</span>  
+            <span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> loadDataSet <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            dataset_tg.reloadDataSet<span class="asBracket">()</span>;            
+            dataset_users.reloadDataSet<span class="asBracket">()</span>;                        
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> doEditTests <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> obi <span class="asOperator">:</span> TestsObMachAdmin <span class="asOperator">=</span> PopUpManager.createPopUp<span class="asBracket">(</span>DisplayObject <span class="asBracket">(</span>Application.application<span class="asBracket">)</span>,
+              TestsObMachAdmin, <span class="asReserved">true</span> <span class="asBracket">)</span> <span class="asReserved">as</span> TestsObMachAdmin;
+            PopUpManager.centerPopUp<span class="asBracket">(</span>obi<span class="asBracket">)</span>;
+            obi.executeTestAdminWindow <span class="asBracket">(</span>
+                <span class="asBracket">{</span>TestGroupID <span class="asOperator">:</span> dataset_tg.currentRow<span class="asBracket">[</span><span class="asString">&apos;TestGroupID&apos;</span><span class="asBracket">]}</span>,
+                <span class="asBracket">{</span>TestGroupID <span class="asOperator">:</span> dataset_tg.currentRow<span class="asBracket">[</span><span class="asString">&apos;TestGroupID&apos;</span><span class="asBracket">]}</span>                
+            <span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asComment">// -----------------------------------------------------------
+</span>        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+    
+    <span class="mxmlComponent">&lt;mx:VBox</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+        <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Панель управления тестами &apos;Обучающей машины mysql&apos; </span>&quot;  styleName=&quot;<span class="mxmlString">heading_form</span>&quot;<span class="mxmlComponent">/&gt;</span>        
+            <span class="mxmlComponent">&lt;mx:Label</span> id=&quot;<span class="mxmlString">sandbox</span>&quot; text=&quot;<span class="mxmlString">sandbox type = {</span>sandboxType<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Наборы тестов</span>&quot; textAlign=&quot;<span class="mxmlString">center</span>&quot;<span class="mxmlComponent">/&gt;</span>                    
+        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+        <span class="mxmlComponent">&lt;mx:DataGrid</span> width=&quot;<span class="mxmlString">100%</span>&quot; id=&quot;<span class="mxmlString">grid_test_groups</span>&quot; <span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:columns&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">Название</span>&quot;  dataField=&quot;<span class="mxmlString">TestGroupName</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">Изменен</span>&quot; dataField=&quot;<span class="mxmlString">ModifyDate</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">Адрес справки</span>&quot; dataField=&quot;<span class="mxmlString">HelpURL</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">Адрес подсказки</span>&quot; dataField=&quot;<span class="mxmlString">TestGroupURLInfo</span>&quot; <span class="mxmlComponent">/&gt;</span>                
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">Используемые таблицы</span>&quot; dataField=&quot;<span class="mxmlString">TableNamesList</span>&quot; <span class="mxmlComponent">/&gt;</span>                                
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">Автор</span>&quot; dataField=&quot;<span class="mxmlString">UserFIO</span>&quot; <span class="mxmlComponent">/&gt;</span>                                                
+            <span class="mxmlComponent">&lt;/mx:columns&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:DataGrid&gt;</span>
+        
+        <span class="mxmlComponent">&lt;mx:Panel</span> title=&quot;<span class="mxmlString">Свойства выбранной записи</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+         <span class="mxmlComponent">&lt;mx:VBox</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;user:DataNavigator</span> id=&quot;<span class="mxmlString">nav_test_groups</span>&quot;  width=&quot;<span class="mxmlString">100%</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:Button</span> enabled=&quot;<span class="mxmlString">{</span>grid_test_groups.selectedItem <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="mxmlString">}</span>&quot;  id=&quot;<span class="mxmlString">btn_edit_tests</span>&quot;
+                           label=&quot;<span class="mxmlString">Править вопросы в составе данной группы</span>&quot;
+                           click=&quot;doEditTests <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;
+                <span class="mxmlComponent">/&gt;</span>
+                
+                <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:Form</span> height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>                        
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Общие свойства набора тестов</span>&quot; styleName=&quot;<span class="mxmlString">heading_subgroup</span>&quot; width=&quot;<span class="mxmlString">90%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">{</span>dataset_tg.isInEditState<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Название набора тестов</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">TestGroupName</span>&quot; width=&quot;<span class="mxmlString">400</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Примечание к набору тестов</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextArea</span> id=&quot;<span class="mxmlString">TestGroupComment</span>&quot; width=&quot;<span class="mxmlString">400</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Адрес страницы с подсказками</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">TestGroupURLInfo</span>&quot; width=&quot;<span class="mxmlString">400</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Список задействованных таблиц</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">TableNamesList</span>&quot; width=&quot;<span class="mxmlString">400</span>&quot;   <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Адрес страницы со справкой</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">HelpURL</span>&quot; width=&quot;<span class="mxmlString">400</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Дата изменения</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">ModifyDate</span>&quot; width=&quot;<span class="mxmlString">400</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Общий лимит времени</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">superTimeLimit</span>&quot; width=&quot;<span class="mxmlString">100</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        
+                        
+                    <span class="mxmlComponent">&lt;/mx:Form&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Владелец набора тестов</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComment">&lt;!--</span><span class="mxmlComment">
+                        &lt;mx:ComboBox id=&quot;combo_users&quot; 
+                            width=&quot;300&quot; 
+                            dataProvider=&quot;{dataset_tg.DataSet}&quot; 
+                            labelField=&quot;UserLogin&quot; /&gt;
+                        </span><span class="mxmlComment">--&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:DataGrid</span> width=&quot;<span class="mxmlString">100%</span>&quot; id=&quot;<span class="mxmlString">grid_owners</span>&quot; <span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:columns&gt;</span>
+                                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">Логин</span>&quot;  dataField=&quot;<span class="mxmlString">UserLogin</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">ФИО</span>&quot; dataField=&quot;<span class="mxmlString">UserFIO</span>&quot; <span class="mxmlComponent">/&gt;</span>                
+                            <span class="mxmlComponent">&lt;/mx:columns&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:DataGrid&gt;</span>
+                                
+                    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>        
+                <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:HBox</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:Form&gt;</span>                        
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Параметры подключения к базе 1 (основной)</span>&quot; styleName=&quot;<span class="mxmlString">heading_subgroup</span>&quot; width=&quot;<span class="mxmlString">90%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+        
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Имя сервера для базы 1 (основной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_host_1</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Имя входа для базы 1 (основной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_user_1</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Пароль входа для базы 1 (основной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_password_1</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot; displayAsPassword=&quot;<span class="mxmlString">true</span>&quot;   <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Имя базы 1 (основной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_db_1</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                    <span class="mxmlComponent">&lt;/mx:Form&gt;</span>
+                
+                    <span class="mxmlComponent">&lt;mx:Form&gt;</span>                                        
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Параметры подключения к базе 1 (основной)</span>&quot; styleName=&quot;<span class="mxmlString">heading_subgroup</span>&quot; width=&quot;<span class="mxmlString">90%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Имя сервера для базы 2 (дополнительной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_host_2</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Имя входа для базы 2 (дополнительной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_user_2</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Пароль входа для базы 2 (дополнительной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_password_2</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot;  displayAsPassword=&quot;<span class="mxmlString">true</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Имя базы 2 (дополнительной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">param_db_2</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+        
+                        <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">Префикс таблиц в базе 2 (дополнительной)</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">PrefixForDB2</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                   <span class="mxmlComponent">&lt;/mx:Form&gt;</span>
+                   
+              <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:Panel&gt;</span>
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+<span class="mxmlComponent">&lt;/mx:Box&gt;</span></pre></body>
+</html>

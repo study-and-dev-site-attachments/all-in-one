@@ -1,0 +1,126 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>TestsObMachAdmin.mxml</title>
+<link rel="stylesheet" type="text/css" href="../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:TitleWindow</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; 
+    xmlns:user = &quot;<span class="mxmlString">user_components.*</span>&quot;
+    layout=&quot;<span class="mxmlString">absolute</span>&quot; 
+    width=&quot;<span class="mxmlString">800</span>&quot; height=&quot;<span class="mxmlString">640</span>&quot;
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    title=&quot;<span class="mxmlString">Управление тестами</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asReserved">import</span> logic.GlobalParams;
+            <span class="asReserved">import</span> mx.managers.PopUpManager;
+            <span class="asReserved">import</span> logic.HessianScrollEvent;
+            <span class="asReserved">import</span> user_components.SimpleClockPopup;
+            <span class="asReserved">import</span> logic.HessianDataSet;
+            <span class="asReserved">import</span> logic.IPopupWhileLoadingControl;
+            <span class="asReserved">import</span> logic.HessianDataSetEvent;
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>        
+            <span class="asReserved">private</span> <span class="asVar">var</span> dataset_tests<span class="asOperator">:</span>HessianDataSet;
+
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> onDataSetReady <span class="asBracket">(</span>e<span class="asOperator">:</span> HessianDataSetEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                    
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">protected</span> <span class="asVar">var</span> filter  <span class="asOperator">:</span> Object;
+            <span class="asReserved">protected</span> <span class="asVar">var</span> defaults <span class="asOperator">:</span> Object;
+
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> doClose <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                PopUpManager.removePopUp<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;             
+            <span class="asBracket">}</span>
+            
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> onAppendTest <span class="asBracket">(</span>e<span class="asOperator">:</span> HessianScrollEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> key <span class="asOperator">:</span> Object <span class="asReserved">in</span> defaults<span class="asBracket">){</span>
+                    dataset_tests.currentRow <span class="asBracket">[</span>key<span class="asBracket">]</span> <span class="asOperator">=</span> defaults<span class="asBracket">[</span>key<span class="asBracket">]</span>;    
+                <span class="asBracket">}</span>
+                
+            <span class="asBracket">}</span>
+        
+            
+            <span class="asReserved">public</span> <span class="asFunction">function</span> executeTestAdminWindow <span class="asBracket">(</span>filter <span class="asOperator">:</span> Object, defaults<span class="asOperator">:</span> Object <span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">this</span>.filter <span class="asOperator">=</span> filter;
+                <span class="asReserved">this</span>.defaults <span class="asOperator">=</span> defaults;
+                
+                <span class="asComment">// ------------------- testgroups --------------------------
+</span>                <span class="asVar">var</span> dlg_shower  <span class="asOperator">:</span> IPopupWhileLoadingControl <span class="asOperator">=</span> <span class="asReserved">new</span> SimpleClockPopup <span class="asBracket">()</span>;
+                
+                dataset_tests <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSet <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;admin&quot;</span><span class="asBracket">)</span>, <span class="asString">&quot;ob_test&quot;</span>, <span class="asReserved">null</span>, dlg_shower<span class="asBracket">)</span>;
+                dataset_tests.attachDataGrid <span class="asBracket">(</span>grid_tests<span class="asBracket">)</span>;
+                dataset_tests.attachNavigator<span class="asBracket">(</span>nav_tests<span class="asBracket">)</span>;
+                dataset_tests.addEventListener<span class="asBracket">(</span>HessianDataSetEvent.HESSIAN_CALL, onDataSetReady<span class="asBracket">)</span>;
+                dataset_tests.addEventListener<span class="asBracket">(</span>HessianScrollEvent.DATASET_TRIGGERED_APPEND, onAppendTest<span class="asBracket">)</span>;
+                dataset_tests.setDataBinding <span class="asBracket">(</span>
+                <span class="asBracket">[</span>
+                    <span class="asBracket">{</span>control<span class="asOperator">:</span> UserOrder, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span> , field<span class="asOperator">:</span> <span class="asString">&quot;UserOrder&quot;</span><span class="asBracket">}</span>,
+                    <span class="asBracket">{</span>control<span class="asOperator">:</span> countOfTries, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;countOfTries&quot;</span><span class="asBracket">}</span>,
+                    <span class="asBracket">{</span>control<span class="asOperator">:</span> timeLimit, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;timeLimit&quot;</span><span class="asBracket">}</span>,
+                    <span class="asBracket">{</span>control<span class="asOperator">:</span> sqlQuestion, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;sqlQuestion&quot;</span><span class="asBracket">}</span>,
+                    <span class="asBracket">{</span>control<span class="asOperator">:</span> sqlRight, property<span class="asOperator">:</span> <span class="asString">&quot;text&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;sqlRight&quot;</span><span class="asBracket">}</span>,
+                    
+                    <span class="asBracket">{</span>control<span class="asOperator">:</span> columnsOrderImportant, property<span class="asOperator">:</span> <span class="asString">&quot;selected&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;columnsOrderImportant&quot;</span><span class="asBracket">}</span>,
+                    <span class="asBracket">{</span>control<span class="asOperator">:</span> rowOrderImportant, property<span class="asOperator">:</span> <span class="asString">&quot;selected&quot;</span>, field<span class="asOperator">:</span> <span class="asString">&quot;rowOrderImportant&quot;</span><span class="asBracket">}</span>
+                
+                <span class="asBracket">]</span>  
+                <span class="asBracket">)</span>;
+                
+                dataset_tests.DS_Load<span class="asBracket">(</span>filter<span class="asBracket">)</span>;                            
+            <span class="asBracket">}</span><span class="asComment">// end of -- executeTestAdminWindow -- 
+</span>        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+    <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Button</span> click=&quot;doClose <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; label=&quot;<span class="mxmlString">Закрыть</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            
+            <span class="mxmlComponent">&lt;mx:DataGrid</span> id=&quot;<span class="mxmlString">grid_tests</span>&quot; height=&quot;<span class="mxmlString">275</span>&quot; editable=&quot;<span class="mxmlString">false</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;mx:columns&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">UserOrder</span>&quot; width=&quot;<span class="mxmlString">50</span>&quot; headerText=&quot;<span class="mxmlString">Номер п/п</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">columnsOrderImportant</span>&quot; width=&quot;<span class="mxmlString">40</span>&quot; headerText=&quot;<span class="mxmlString">Важны Колонки</span>&quot; itemRenderer=&quot;<span class="mxmlString">mx.controls.CheckBox</span>&quot; rendererIsEditor=&quot;<span class="mxmlString">false</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">rowOrderImportant</span>&quot; width=&quot;<span class="mxmlString">40</span>&quot; headerText=&quot;<span class="mxmlString">Важны Строки</span>&quot; itemRenderer=&quot;<span class="mxmlString">mx.controls.CheckBox</span>&quot; editable=&quot;<span class="mxmlString">false</span>&quot; rendererIsEditor=&quot;<span class="mxmlString">false</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:DataGridColumn</span> dataField=&quot;<span class="mxmlString">sqlQuestion</span>&quot;  headerText=&quot;<span class="mxmlString">Вопрос</span>&quot; width=&quot;<span class="mxmlString">600</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:columns&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:DataGrid&gt;</span>
+            <span class="mxmlComponent">&lt;mx:Panel</span> title=&quot;<span class="mxmlString">Свойства выбранной записи</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">290</span>&quot;<span class="mxmlComponent">&gt;</span>
+             <span class="mxmlComponent">&lt;mx:VBox</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                    <span class="mxmlComponent">&lt;user:DataNavigator</span> id=&quot;<span class="mxmlString">nav_tests</span>&quot;  width=&quot;<span class="mxmlString">100%</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:HBox</span> width=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString"># п/п</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">UserOrder</span>&quot; width=&quot;<span class="mxmlString">30</span>&quot; <span class="mxmlComponent">/&gt;</span>
+
+                        <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Важны ли колонки</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">columnsOrderImportant</span>&quot; <span class="mxmlComponent">/&gt;</span>
+
+                        <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Важны ли строки</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">rowOrderImportant</span>&quot; <span class="mxmlComponent">/&gt;</span>
+
+                        <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Кол-во попыток</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">countOfTries</span>&quot; width=&quot;<span class="mxmlString">30</span>&quot; <span class="mxmlComponent">/&gt;</span>
+
+                        <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Лимит времени</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">timeLimit</span>&quot; width=&quot;<span class="mxmlString">30</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:HBox</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Вопрос</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextArea</span> id=&quot;<span class="mxmlString">sqlQuestion</span>&quot; width=&quot;<span class="mxmlString">330</span>&quot; height=&quot;<span class="mxmlString">140</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Правильный ответ</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextArea</span> id=&quot;<span class="mxmlString">sqlRight</span>&quot; width=&quot;<span class="mxmlString">330</span>&quot; height=&quot;<span class="mxmlString">140</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+                  <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+              <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:Panel&gt;</span>
+
+
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+<span class="mxmlComponent">&lt;/mx:TitleWindow&gt;</span></pre></body>
+</html>

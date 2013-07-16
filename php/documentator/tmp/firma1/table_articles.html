@@ -1,0 +1,276 @@
+<html>
+	<head>
+		<title>
+			Таблица articles в firma1 at localhost, docman by black zorro (x15@tut.by) 
+		</title>
+		<style>
+				body {font-size: 12px; font-family: arial;}
+				.div_table_here {
+					font-size: 14px;
+					margin: 5px;
+					padding: 3px;
+					border-left: 2px solid black;
+				}
+				.outer_all_tables{
+					margin-left: 100px;
+				}
+				
+				.div_heading {
+				  font-size: 16px;
+				  font-weight: bold;
+				  color: orange;
+				  background-color: black;
+				  padding: 5px;
+				  margin: 5px;
+				}
+				
+				.div_goback {
+				  font-size: 12px;
+				  font-weight: bold;
+				  color: orange;
+				  background-color: black;
+				  padding: 5px;
+				  margin: 5px;
+				}
+				
+				.table_fields_list {
+					font-size: 12px;
+					font-family: arial;
+					border-collapse: collapse;
+				}
+				
+				.table_fields_list th {
+				  font-weight: bold;
+				  background-color: #BFDBAB;
+				  border: 1px solid black;
+				}
+				
+				.table_fields_list td {
+				 border: 1px solid black;
+				}
+				
+				a {
+					font-size: 12px;
+					font-family: arial;
+					color: orange;
+				}
+				
+				.outer_all_fields {
+					margin-left: 100px;
+				}
+				
+				.outer_all_data {
+					margin-left: 100px;
+				}
+				
+				.table_data_list {
+					font-size: 12px;
+					font-family: arial;
+					border-collapse: collapse;
+				}
+				
+				.table_data_list th {
+				  font-weight: bold;
+				  background-color: #BFDBAB;
+				  border: 1px solid black;
+				}
+				
+				.table_data_list td {
+				 border: 1px solid black;
+				}				
+				
+				
+				.div_heading_meta {
+				  font-size: 16px;
+				  font-weight: bold;
+				  color: orange;
+				  background-color: black;
+				  padding: 5px;
+				  margin: 5px;
+				  text-align: center;
+				  margin-left: 50px; margin-right: 50xp;
+				}
+
+				.div_heading_data {
+				  font-size: 16px;
+				  font-weight: bold;
+				  color: orange;
+				  background-color: black;
+				  padding: 5px;
+				  margin: 5px;
+				  text-align: center;
+				  margin-left: 50px; margin-right: 50xp;
+				}
+				
+		</style>
+	</head>
+ 	 <body>
+ 		<div class="div_heading">Таблица articles в firma1 at localhost</div>
+ 		<div class="div_goback"><a href="index.html">Вернуться назад к списку всех таблиц</a></div>
+ 		
+			<div class="div_heading_meta">
+				Информация о структуре таблицы
+			</div>
+
+			
+ 		<div class="outer_all_fields">
+ 		
+ 		<table  border='0' cellspacing='0' cellpadding='0' class="table_fields_list">
+			<tr>
+				<th align="left" valign="top">Название поля</th>
+				<th align="left" valign="top">Тип поля</th>
+				<th align="left" valign="top">Null</th>
+				<th align="left" valign="top">Ключ</th>
+				<th align="left" valign="top">По-умолчанию</th>
+				<th align="left" valign="top">Дополнительно</th>
+			</tr>
+
+ 	   				<tr>
+  					<td align="left" valign="top"><a name='ArticleID' ><!-- * --></a>ArticleID</td>
+  					<td align="left" valign="top">varchar(100)</td>
+  					<td align="left" valign="top"><input type="checkbox" disabled="disabled"  /></td>
+  					<td align="left" valign="top">PRI</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  				</tr>
+  				<tr>
+  					<td colspan="6">
+  						<p>Это поле является уникальными идентификатором товара, оно является строкой текста длиной не более 100 символов, и связано с таблицей детализации заказов: <a href='table_order_details.html#ArticleID'>order_details#ArticleID</a></p>  					</td>
+  				</tr>
+
+  				  				<tr>
+  					<td align="left" valign="top"><a name='ArticleInfo' ><!-- * --></a>ArticleInfo</td>
+  					<td align="left" valign="top">varchar(100)</td>
+  					<td align="left" valign="top"><input type="checkbox" disabled="disabled"  /></td>
+  					<td align="left" valign="top">UNI</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  				</tr>
+  				<tr>
+  					<td colspan="6">
+  						  					</td>
+  				</tr>
+
+  				  				<tr>
+  					<td align="left" valign="top"><a name='IsFood' ><!-- * --></a>IsFood</td>
+  					<td align="left" valign="top">int(11)</td>
+  					<td align="left" valign="top"><input type="checkbox" disabled="disabled"  checked="checked"  /></td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  				</tr>
+  				<tr>
+  					<td colspan="6">
+  						  					</td>
+  				</tr>
+
+  				  				<tr>
+  					<td align="left" valign="top"><a name='IsManufacture' ><!-- * --></a>IsManufacture</td>
+  					<td align="left" valign="top">int(11)</td>
+  					<td align="left" valign="top"><input type="checkbox" disabled="disabled"  checked="checked"  /></td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  				</tr>
+  				<tr>
+  					<td colspan="6">
+  						  					</td>
+  				</tr>
+
+  				  				<tr>
+  					<td align="left" valign="top"><a name='MinimumSize' ><!-- * --></a>MinimumSize</td>
+  					<td align="left" valign="top">int(11)</td>
+  					<td align="left" valign="top"><input type="checkbox" disabled="disabled"  checked="checked"  /></td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  					<td align="left" valign="top">&nbsp;</td>
+  				</tr>
+  				<tr>
+  					<td colspan="6">
+  						  					</td>
+  				</tr>
+
+  					
+	</table>
+	</div>
+				
+
+			<div class="div_heading_data">
+				Данные содержащиеся в таблице на момент документирования
+			</div>
+			
+	 		<div class="outer_all_data">
+ 		
+ 		<table  border='0' cellspacing='0' cellpadding='0' class="table_data_list">
+			<tr>
+				  				<th align="left" valign="top">ArticleID</th>
+  				  				<th align="left" valign="top">ArticleInfo</th>
+  				  				<th align="left" valign="top">IsFood</th>
+  				  				<th align="left" valign="top">IsManufacture</th>
+  				  				<th align="left" valign="top">MinimumSize</th>
+  							</tr>
+
+ 	   				<tr>
+  													<td align="left" valign="top">AAA-001</td>  							
+															<td align="left" valign="top">pants</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">100</td>  							
+							  				</tr>
+  	   				<tr>
+  													<td align="left" valign="top">AAA-002</td>  							
+															<td align="left" valign="top">shirt</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">50</td>  							
+							  				</tr>
+  	   				<tr>
+  													<td align="left" valign="top">AAA-003</td>  							
+															<td align="left" valign="top">coat</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">20</td>  							
+							  				</tr>
+  	   				<tr>
+  													<td align="left" valign="top">AAA-004</td>  							
+															<td align="left" valign="top">necktie</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">120</td>  							
+							  				</tr>
+  	   				<tr>
+  													<td align="left" valign="top">BBB-001</td>  							
+															<td align="left" valign="top">apple</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">2000</td>  							
+							  				</tr>
+  	   				<tr>
+  													<td align="left" valign="top">BBB-002</td>  							
+															<td align="left" valign="top">orange</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">1500</td>  							
+							  				</tr>
+  	   				<tr>
+  													<td align="left" valign="top">BBB-003</td>  							
+															<td align="left" valign="top">grapes</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">4000</td>  							
+							  				</tr>
+  	   				<tr>
+  													<td align="left" valign="top">BBB-004</td>  							
+															<td align="left" valign="top">potatoes</td>  							
+															<td align="left" valign="top">1</td>  							
+															<td align="left" valign="top">0</td>  							
+															<td align="left" valign="top">6000</td>  							
+							  				</tr>
+  	 	
+	</table>
+	</div>
+	
+	
+		
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>HessianDataSetWrapper.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> logic
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> mx.collections.ArrayCollection;
+    <span class="asReserved">import</span> test.BooEvent;
+    
+    <span class="asReserved">public</span> <span class="asClass">class</span> HessianDataSetWrapper
+    <span class="asBracket">{</span>
+        <span class="asDoc">/**
+         * Класс представляет собой обертку над данными которые вернул сервер
+         * состоит из набора записей - массив records
+         * каждой записи ставится в соответствие ее признак (persists, new , edit)
+         */</span> 
+        <span class="asDoc">/**
+         * Массив записей
+         */</span>  
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> records <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;
+        <span class="asDoc">/**
+        * Массив статусов записей
+        */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> records_status <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;
+        <span class="asDoc">/**
+        * Заголовок - содержит сведения об полях которые были возвращены
+        */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>        
+        <span class="asReserved">public</span> <span class="asVar">var</span> header <span class="asOperator">:</span> HessianDataSetHeader <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asDoc">/**
+        * Признак того что набор данных готов к использованию
+        */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>        
+        <span class="asReserved">public</span> <span class="asVar">var</span> status <span class="asOperator">:</span> Boolean;
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>        
+        <span class="asReserved">public</span> <span class="asVar">var</span> msg <span class="asOperator">:</span> String;
+        
+        <span class="asDoc">/**
+        * Признак того что набор данных готов для использования
+        */</span> 
+        <span class="asReserved">public</span> <span class="asVar">var</span> ready <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">false</span>;
+        
+        <span class="asDoc">/**
+        * Ссылка на функцию которая будет использована для форматирования полей типа ДАТА-ВРЕМЯ
+        */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> savedDateTimeFunc <span class="asOperator">:</span> Function ;
+        
+        <span class="asDoc">/**
+        * Реализация функции преобразования ДАТЫ-ВРЕМЯ в строку по-умолчанию (год.месяц.день)
+        */</span> 
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> datetime_YYYYMMDD <span class="asBracket">(</span>dat <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>dat <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asString">&quot;&quot;</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>dat.value <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asString">&quot;&quot;</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>dat.value <span class="asReserved">is</span> Date<span class="asBracket">){</span>
+                <span class="asVar">var</span> ddat <span class="asOperator">:</span> Date <span class="asOperator">=</span> dat.value <span class="asReserved">as</span> Date;
+                <span class="asReserved">return</span> <span class="asString">&quot;&quot;</span><span class="asOperator">+</span>ddat.fullYear<span class="asOperator">+</span><span class="asString">&quot;.&quot;</span><span class="asOperator">+</span><span class="asBracket">(</span>ddat.getMonth<span class="asBracket">()</span><span class="asOperator">+</span>1<span class="asBracket">)</span><span class="asOperator">+</span><span class="asString">&quot;.&quot;</span><span class="asOperator">+</span>ddat.getDate<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> <span class="asString">&quot;&quot;</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         * Конструктор класса, в качестве параметра передается ссылка на сырые данные возвращенные от сервера,
+         * а также функция форматирования ДАТЫ-ВРЕМЕНИ (параметр не обязателен и если он равен null, 
+         * то использутся функция форматирования по-умолчанию)
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> HessianDataSetWrapper <span class="asBracket">(</span>obj <span class="asOperator">:</span> Object, dateTimeFormatFunction <span class="asOperator">:</span> Function<span class="asBracket">){</span>
+            ready <span class="asOperator">=</span> <span class="asReserved">false</span>;
+            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>dateTimeFormatFunction <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span>
+                dateTimeFormatFunction <span class="asOperator">=</span> datetime_YYYYMMDD;
+            savedDateTimeFunc <span class="asOperator">=</span> dateTimeFormatFunction;
+            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>obj <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                msg <span class="asOperator">=</span> obj<span class="asBracket">[</span><span class="asString">&apos;msg&apos;</span><span class="asBracket">]</span>;
+                status <span class="asOperator">=</span> obj<span class="asBracket">[</span><span class="asString">&apos;status&apos;</span><span class="asBracket">]</span>;            
+                header <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSetHeader <span class="asBracket">(</span>obj<span class="asBracket">[</span><span class="asString">&apos;header&apos;</span><span class="asBracket">])</span>;
+                <span class="asVar">var</span> _rows <span class="asOperator">:</span> Array <span class="asOperator">=</span> obj<span class="asBracket">[</span><span class="asString">&apos;records&apos;</span><span class="asBracket">]</span>;
+                <span class="asVar">var</span> _row <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">null</span>;
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> _rows.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                    _row <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+                    <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> j<span class="asOperator">:</span>int <span class="asOperator">=</span> 0; j <span class="asOperator">&lt;</span> _rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row.length; j<span class="asOperator">++</span><span class="asBracket">){</span>
+                        <span class="asReserved">if</span> <span class="asBracket">(</span>HessianDataSetColumn <span class="asBracket">(</span>header.columns<span class="asBracket">[</span>j<span class="asBracket">])</span>.columnType <span class="asOperator">==</span> <span class="asString">&quot;DATETIME&quot;</span><span class="asBracket">)</span>
+                            _row <span class="asBracket">[</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> <span class="asBracket">]</span> <span class="asOperator">=</span> savedDateTimeFunc.call<span class="asBracket">(</span><span class="asReserved">null</span>,_rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row<span class="asBracket">[</span>j<span class="asBracket">])</span>;
+                        <span class="asReserved">else</span><span class="asBracket">{</span>
+                            _row <span class="asBracket">[</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> <span class="asBracket">]</span> <span class="asOperator">=</span> _rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row<span class="asBracket">[</span>j<span class="asBracket">]</span>;
+                        <span class="asBracket">}</span>
+                    <span class="asBracket">}</span><span class="asComment">// for columns in special record
+</span>                    records.addItem<span class="asBracket">(</span>_row<span class="asBracket">)</span>;
+                    records_status.addItem<span class="asBracket">(</span><span class="asString">&quot;persist&quot;</span><span class="asBracket">)</span>;
+                <span class="asBracket">}</span><span class="asComment">// for all records
+</span>                
+                ready <span class="asOperator">=</span> <span class="asReserved">true</span>;<span class="asComment">// набор данных готов для использования
+</span>            <span class="asBracket">}</span><span class="asComment">// if object not null
+</span>        <span class="asBracket">}</span><span class="asComment">// end of -- HessianDataSetWrapper -- 
+</span>        
+        <span class="asDoc">/**
+         * Функция выполняющая замену одной записи под заданным номером на новую информацию из &quot;сырого&quot; объекта возвращенного сервером
+         * @param rec_num - Номер записи
+         * @param rawAnotherObject - Ссылка на &quot;сырые&quot; данные от сервера
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> replaceRecordByRawData<span class="asBracket">(</span>rec_num <span class="asOperator">:</span> int, rawAnotherObject <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>rec_num <span class="asOperator">&lt;</span> 0 <span class="asOperator">||</span> rec_num <span class="asOperator">&gt;=</span> records.length<span class="asBracket">)</span> <span class="asReserved">return</span>;
+            <span class="asVar">var</span> j <span class="asOperator">:</span> int <span class="asOperator">=</span>  0;            
+            <span class="asVar">var</span> _header <span class="asOperator">:</span> HessianDataSetHeader <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSetHeader <span class="asBracket">(</span>rawAnotherObject<span class="asBracket">[</span><span class="asString">&apos;header&apos;</span><span class="asBracket">])</span>;
+            <span class="asVar">var</span> _rows <span class="asOperator">:</span> Array <span class="asOperator">=</span> rawAnotherObject<span class="asBracket">[</span><span class="asString">&apos;records&apos;</span><span class="asBracket">][</span>0<span class="asBracket">]</span>.row;
+            <span class="asVar">var</span> _row <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+            <span class="asComment">// поменять местами элементы записи так чтобы они стали расположены в том же порядке что и в оригинальном наборе
+</span>            <span class="asVar">var</span> __row <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span>j <span class="asOperator">=</span> 0; j <span class="asOperator">&lt;</span> _rows.length; j<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> myfld <span class="asOperator">:</span> String <span class="asOperator">=</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> ;
+                <span class="asVar">var</span> anpos <span class="asOperator">:</span> int <span class="asOperator">=</span> _header.getColumnPosition <span class="asBracket">(</span>myfld<span class="asBracket">)</span> ;                        
+                <span class="asReserved">if</span> <span class="asBracket">(</span>anpos <span class="asOperator">!=</span> <span class="asOperator">-</span>1<span class="asBracket">)</span>
+                    __row<span class="asBracket">[</span>j<span class="asBracket">]</span> <span class="asOperator">=</span> _rows <span class="asBracket">[</span>anpos<span class="asBracket">]</span>;
+                <span class="asReserved">else</span>
+                    __row<span class="asBracket">[</span>j<span class="asBracket">]</span> <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+            <span class="asBracket">}</span>    
+            _row  <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span>j <span class="asOperator">=</span> 0; j <span class="asOperator">&lt;</span> __row.length; j<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>HessianDataSetColumn <span class="asBracket">(</span>header.columns<span class="asBracket">[</span>j<span class="asBracket">])</span>.columnType <span class="asOperator">==</span> <span class="asString">&quot;DATETIME&quot;</span><span class="asBracket">)</span>
+                    _row <span class="asBracket">[</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> <span class="asBracket">]</span> <span class="asOperator">=</span> savedDateTimeFunc.call<span class="asBracket">(</span><span class="asReserved">null</span>,__row<span class="asBracket">[</span>j<span class="asBracket">])</span>;
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                    _row <span class="asBracket">[</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> <span class="asBracket">]</span> <span class="asOperator">=</span> __row<span class="asBracket">[</span>j<span class="asBracket">]</span>;
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span>
+            
+            records.setItemAt<span class="asBracket">(</span>_row, rec_num<span class="asBracket">)</span>;
+            records_status.setItemAt<span class="asBracket">(</span><span class="asString">&quot;persist&quot;</span>, rec_num<span class="asBracket">)</span>;            
+        <span class="asBracket">}</span><span class="asComment">// end of -- replaceRecordByRawData -- 
+</span>        
+        <span class="asDoc">/**
+         * Функция служит для того чтобы дополнить хранящиеся в объекте записи новыми, теми которые вернул сервер в &quot;сыром&quot; виде
+         * @param obj Ссылка на &quot;сырые&quot; данные от сервера
+         */</span>     
+        <span class="asReserved">public</span> <span class="asFunction">function</span> addRecordsFrom <span class="asBracket">(</span>obj <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>obj <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> j <span class="asOperator">:</span> int <span class="asOperator">=</span>  0;
+                <span class="asVar">var</span> _header <span class="asOperator">:</span> HessianDataSetHeader <span class="asOperator">=</span> <span class="asReserved">new</span> HessianDataSetHeader <span class="asBracket">(</span>obj<span class="asBracket">[</span><span class="asString">&apos;header&apos;</span><span class="asBracket">])</span>;
+                <span class="asVar">var</span> _rows <span class="asOperator">:</span> Array <span class="asOperator">=</span> obj<span class="asBracket">[</span><span class="asString">&apos;records&apos;</span><span class="asBracket">]</span>;
+                <span class="asVar">var</span> _row <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">null</span>;
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> _rows.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                    _row <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+                    <span class="asComment">// поменять местами элементы записи так чтобы они стали расположены в том же порядке что и в оригинальном наборе
+</span>                    <span class="asVar">var</span> __row <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+                    <span class="asReserved">for</span> <span class="asBracket">(</span>j <span class="asOperator">=</span> 0; j <span class="asOperator">&lt;</span> _rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row.length; j<span class="asOperator">++</span><span class="asBracket">){</span>
+                        <span class="asVar">var</span> myfld <span class="asOperator">:</span> String <span class="asOperator">=</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> ;
+                        <span class="asVar">var</span> anpos <span class="asOperator">:</span> int <span class="asOperator">=</span> _header.getColumnPosition <span class="asBracket">(</span>myfld<span class="asBracket">)</span> ;                        
+                        <span class="asReserved">if</span> <span class="asBracket">(</span>anpos <span class="asOperator">!=</span> <span class="asOperator">-</span>1<span class="asBracket">)</span>
+                            __row<span class="asBracket">[</span>j<span class="asBracket">]</span> <span class="asOperator">=</span> _rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row <span class="asBracket">[</span>anpos<span class="asBracket">]</span>;
+                        <span class="asReserved">else</span>
+                            __row<span class="asBracket">[</span>j<span class="asBracket">]</span> <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                    <span class="asBracket">}</span>    
+                    _rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row <span class="asOperator">=</span> __row;
+                    <span class="asReserved">for</span> <span class="asBracket">(</span>j <span class="asOperator">=</span> 0; j <span class="asOperator">&lt;</span> _rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row.length; j<span class="asOperator">++</span><span class="asBracket">){</span>
+                        <span class="asReserved">if</span> <span class="asBracket">(</span>HessianDataSetColumn <span class="asBracket">(</span>header.columns<span class="asBracket">[</span>j<span class="asBracket">])</span>.columnType <span class="asOperator">==</span> <span class="asString">&quot;DATETIME&quot;</span><span class="asBracket">)</span>
+                            _row <span class="asBracket">[</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> <span class="asBracket">]</span> <span class="asOperator">=</span> savedDateTimeFunc.call<span class="asBracket">(</span><span class="asReserved">null</span>,_rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row<span class="asBracket">[</span>j<span class="asBracket">])</span>;
+                        <span class="asReserved">else</span><span class="asBracket">{</span>
+                            _row <span class="asBracket">[</span> header.getColumnName <span class="asBracket">(</span>j<span class="asBracket">)</span> <span class="asBracket">]</span> <span class="asOperator">=</span> _rows<span class="asBracket">[</span>i<span class="asBracket">]</span>.row<span class="asBracket">[</span>j<span class="asBracket">]</span>;
+                        <span class="asBracket">}</span>
+                    <span class="asBracket">}</span><span class="asComment">// for columns in special record
+</span>                    records.addItem<span class="asBracket">(</span>_row<span class="asBracket">)</span>;
+                    records_status.addItem<span class="asBracket">(</span><span class="asString">&quot;persist&quot;</span><span class="asBracket">)</span>;
+                <span class="asBracket">}</span><span class="asComment">// for all records
+</span>            <span class="asBracket">}</span>
+        <span class="asBracket">}</span><span class="asComment">// end of -- HessianDataSetWrapper -- 
+</span>
+
+        
+        <span class="asDoc">/**
+         * Функция возвращает количество записей
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getRecordCount <span class="asBracket">()</span><span class="asOperator">:</span>int<span class="asBracket">{</span>
+            <span class="asReserved">return</span> records.length;
+        <span class="asBracket">}</span><span class="asComment">// end of -- getRecordCount --
+</span>        
+        <span class="asDoc">/**
+         * Функция возвращает значение идентификатора записи (первичный ключ в таблице) для конкретной записи
+         * @param record_num Номер записи для которой нужно найти первичный ключ
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getRecordIDByNum <span class="asBracket">(</span>record_num <span class="asOperator">:</span> int<span class="asBracket">)</span><span class="asOperator">:</span>Object<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>record_num<span class="asOperator">&lt;</span>0 <span class="asOperator">||</span> record_num <span class="asOperator">&gt;=</span> records.length<span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">null</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> header.columns.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+              <span class="asVar">var</span> col <span class="asOperator">:</span> HessianDataSetColumn <span class="asOperator">=</span> header.columns<span class="asBracket">[</span>i<span class="asBracket">]</span> <span class="asReserved">as</span> HessianDataSetColumn;
+              <span class="asReserved">if</span> <span class="asBracket">(</span>col.isPrimaryKey <span class="asBracket">)</span>
+                  <span class="asReserved">return</span> records<span class="asBracket">[</span>record_num<span class="asBracket">][</span>col.columnName<span class="asBracket">]</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> <span class="asReserved">null</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- getID --
+</span>        
+        
+        <span class="asDoc">/**
+         * Функция возвращает номер записи которая имеет следующий идентификатор записи (первичный ключ в таблице) 
+         * @param recid Значение первичного ключа
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> getRecordNumByID <span class="asBracket">(</span>recid <span class="asOperator">:</span> int<span class="asBracket">)</span><span class="asOperator">:</span>Object<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>recid <span class="asOperator">&lt;=</span> 0<span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">null</span>;
+            <span class="asVar">var</span> pkname <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asReserved">null</span>;
+            <span class="asVar">var</span> i <span class="asOperator">:</span> int;
+            <span class="asReserved">for</span> <span class="asBracket">(</span>i <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> header.columns.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+              <span class="asVar">var</span> col <span class="asOperator">:</span> HessianDataSetColumn <span class="asOperator">=</span> header.columns<span class="asBracket">[</span>i<span class="asBracket">]</span> <span class="asReserved">as</span> HessianDataSetColumn;
+              <span class="asReserved">if</span> <span class="asBracket">(</span>col.isPrimaryKey <span class="asBracket">){</span>
+                  pkname <span class="asOperator">=</span> col.columnName;
+                  <span class="asReserved">break</span>;
+              <span class="asBracket">}</span>
+                  
+            <span class="asBracket">}</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>pkname <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">null</span>;
+            
+            <span class="asReserved">for</span> <span class="asBracket">(</span>i <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> records.length; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>records<span class="asBracket">[</span>i<span class="asBracket">][</span>pkname<span class="asBracket">]</span> <span class="asOperator">==</span> recid<span class="asBracket">)</span>
+                    <span class="asReserved">return</span> i;
+            <span class="asReserved">return</span> <span class="asReserved">null</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- getID --
+</span>        
+        
+    <span class="asBracket">}</span><span class="asComment">// end of -- CLASS --
+</span><span class="asBracket">}</span><span class="asComment">// end of -- PACKAGE --</span></pre></body>
+</html>

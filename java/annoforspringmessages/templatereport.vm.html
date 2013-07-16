@@ -1,0 +1,118 @@
+#*
+ Шаблон velocity для отображения результатов проверки наличия кодов сообщений
+*#
+<style>
+ .errorBlock {
+   font-weight: bold;
+   color: red;
+   margin: 10px;
+   padding: 5px;
+   border: 2px solid black;
+   font-family: arial;
+ }
+ .goodBlock {
+   font-weight: bold;
+   color: green;
+   margin: 10px;
+   padding: 5px;
+   border: 2px solid black;
+   font-family: arial;
+ }
+
+  .resourceUseBlock{
+      margin: 10px;
+      padding: 5px;
+      border: 2px solid black;
+      font-family: arial;
+  }
+
+  .resourceUseBlock h2 {
+      color: blue;
+      font-weight: bold;
+      font-size: 14px;
+  }
+
+  .subListBeanClasses {
+      font-size: 12px;
+  }
+
+  .subListBeanClasses p{
+      font-size: 12px;
+      list-style-type: circle;
+      padding-left: 20px;
+  }
+
+    .tableBlock td{
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+</style>
+
+## печатаем сведения об источниках сообщений и тех валидаторах которые их используют
+
+#foreach ($key in ${resources.keySet()})
+       <div class="resourceUseBlock">
+           <h2>$key</h2>
+              #set ($values = ${resources.get($key)})
+              <ul class="subListBeanClasses">
+              #foreach ($key2 in $values)
+                <li>
+                    $key2
+                </li>
+              #end
+              </ul>
+       </div>
+#end
+
+
+## выведем все коды для которых были обнаружены ошибки
+
+<div class="errorBlock">
+ Обнаружены ошибки для следующих кодов сообщений
+</div>
+
+<table border="1" cellpadding="0" cellspacing="0"  class="tableBlock">
+ <tr>
+   <th>Локаль</th>
+   <th>Код</th>
+   <th>Класс</th>
+   <th>Имя поля</th>
+   <th>Значение</th>    
+ </tr>
+
+ #foreach ($troika in  $bad)
+   <tr>
+    <td>$troika.locale</td>
+    <td>$troika.keyCode</td>
+    <td>$troika.validatorClassName</td>
+    <td>$troika.fieldName</td>
+    <td>$troika.value</td>
+ </tr>
+ #end
+ </table>
+
+## теперь выведем все коды для которых не были обнаружены ошибки
+
+<div class="goodBlock">
+ Ошибки не обнаружены для следующих кодов сообщений
+</div>
+<table border="1" cellpadding="0" cellspacing="0" class="tableBlock">
+ <tr>
+   <th>Локаль</th>
+   <th>Код</th>
+   <th>Класс</th>
+   <th>Имя поля</th>
+   <th>Значение</th>
+ </tr>
+
+ #foreach ($troika in  $good)
+   <tr>
+    <td>$troika.locale</td>
+    <td>$troika.keyCode</td>
+    <td>$troika.validatorClassName</td>
+    <td>$troika.fieldName</td>
+    <td>$troika.value</td>
+ </tr>
+ #end
+
+</table>

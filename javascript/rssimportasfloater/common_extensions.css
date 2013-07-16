@@ -1,0 +1,188 @@
+/*       =========================================================    */
+
+.d_zone_rss_splash{
+ position: absolute;
+ right: 20px;
+ top: 40px;
+ width: 260px;
+ border: 2px solid black;
+ background-color: #f4eacc;
+ font-size: 12px;
+ font-family: arial;
+ z-index: 1001;
+ padding: 3px;
+ margin: 3px;
+}
+
+.d_zone_rss_splash_items_container {
+ margin: 3px;
+ padding: 3px;
+ border: 2px solid black;
+ background-color: #eaeacc;
+ font-size: 12px;
+ font-family: arial;
+}
+
+.e_big_title_rss_news_splash {
+ margin-top: 5px;
+ margin-bottom: 5px;
+ margin-left: 3px;
+ font-size: 18px;
+ display: inline;
+ cursor : pointer;
+}
+
+.div_rss_splash_news_item {
+ margin-top: 15px;
+ padding-left: 3px;
+ padding-right: 3px;
+}
+
+.e_buttons_title_rss_news_splash {
+  margin-top: 15px;
+}
+
+.e_page_button_rss_news_splash {
+ font-size: 16px;
+ padding: 3px;
+ background-color: #eae125;
+ color: black;
+ display: inline;
+ cursor: pointer;
+ margin-left: 5px;
+ margin-bottom: 5px;
+}
+
+.e_page_button_rss_news_splash:hover {
+ font-size: 16px;
+ padding: 3px;
+ background-color: #eae1c1;
+ color: black;
+ display: inline;
+ cursor: pointer;
+ margin-left: 5px;
+ margin-bottom: 5px;
+}
+
+.btn_page_active {
+ background-color: #1256c1; 
+ color: white;
+ font-weight: bold;
+}
+/* ============================================================ */
+.e_restore_pic{
+ text-decoration: none;
+ position: absolute;
+ top: 2px;
+ left: 2px;
+ display: inline;
+ border: 0px;
+ cursor: pointer;
+ width: 32px;
+ height: 32px;
+ background:url(img/vis_from_tray.png) no-repeat left top transparent;
+}
+
+.e_close_pic {
+ text-decoration: none;
+ position: absolute;
+ top: 2px;
+ left: 2px;
+ display: inline;
+ border: 0px;
+ cursor: pointer;
+ width: 32px;
+ height: 32px;
+ background:url(img/vis_to_tray.png) no-repeat left top transparent;
+}
+
+
+.e_halt_pic {
+ text-decoration: none;
+ position: absolute;
+ top: 2px;
+ left: 32px;
+ display: inline;
+ border: 0px;
+ cursor: pointer;
+ width: 32px;
+ height: 32px;
+ background:url(img/vis_close.png) no-repeat left top transparent;
+}
+/* ============================================================ */
+
+
+/* ============================================================ */
+.e_restore_pic:hover{
+ text-decoration: none;
+ position: absolute;
+ top: 2px;
+ left: 2px;
+ display: inline;
+ border: 0px;
+ cursor: pointer;
+ width: 32px;
+ height: 32px;
+ background:url(img/a_vis_from_tray.png) no-repeat left top transparent;
+}
+
+.e_close_pic:hover {
+ text-decoration: none;
+ position: absolute;
+ top: 2px;
+ left: 2px;
+ display: inline;
+ border: 0px;
+ cursor: pointer;
+ width: 32px;
+ height: 32px;
+ background:url(img/a_vis_to_tray.png) no-repeat left top transparent;
+}
+
+
+.e_halt_pic:hover {
+ text-decoration: none;
+ position: absolute;
+ top: 2px;
+ left: 32px;
+ display: inline;
+ border: 0px;
+ cursor: pointer;
+ width: 32px;
+ height: 32px;
+ background:url(img/a_vis_close.png) no-repeat left top transparent;
+}
+/* ============================================================ */
+
+
+.div_date_rss_news_splash {
+ font-weight: bold;
+ text-align: right;
+ margin-right: 40px;
+}
+
+
+#loading_rss_1 {
+ font-size: 48px;
+ font-weight: bold;
+ text-align: center;
+ font-family: Arial;
+}
+
+
+#loading_rss_2 {
+ font-size: 16px;
+ font-weight: bold;
+ text-align: center;
+ font-family: Arial;
+}
+
+#loading_rss_3 {
+ font-size: 12px;
+ font-weight: bold;
+ text-align: right;
+ font-family: Arial;
+}
+
+
+

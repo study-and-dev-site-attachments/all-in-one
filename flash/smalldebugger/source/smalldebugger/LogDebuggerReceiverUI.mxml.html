@@ -1,0 +1,54 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>LogDebuggerReceiverUI.mxml</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComment">&lt;!--</span><span class="mxmlComment">
+ * SmallDebugServer (http://black-zorro.com/mediawiki/proj_smallflexdebugger)
+ * @author Nikolai Gishkevich aka black zorro
+</span><span class="mxmlComment">--&gt;</span>
+<span class="mxmlComponent">&lt;mx:SWFLoader</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; implements=&quot;<span class="mxmlString">smalldebugger.IListenerOnDebug</span>&quot;
+    source=&quot;<span class="mxmlString">@Embed(&apos;/assets/roundbag.swf&apos;)</span>&quot;
+    trustContent=&quot;<span class="mxmlString">true</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asDoc">/**
+             Визуальный компонент представляющий собой вертящуюся штуковину в верху окна программы, каждый раз когда приходит debug сообщение
+             в основе своей использован flash9 ролик с вызываемой функцией DoRotate запускающей процесс вращения
+            */</span>
+            <span class="asReserved">import</span> mx.managers.SystemManager;
+            <span class="asReserved">public</span> <span class="asVar">var</span> _listener <span class="asOperator">:</span> SmallDebuggerPool <span class="asOperator">=</span> <span class="asReserved">null</span>;
+            
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>            
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> listener <span class="asBracket">()</span><span class="asOperator">:</span>SmallDebuggerPool<span class="asBracket">{</span>
+                <span class="asReserved">return</span> _listener;
+            <span class="asBracket">}</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> listener <span class="asBracket">(</span>_nlist <span class="asOperator">:</span> SmallDebuggerPool<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                 <span class="asReserved">if</span> <span class="asBracket">(</span>_listener<span class="asOperator">!=</span><span class="asReserved">null</span><span class="asBracket">)</span>
+                     _listener.removeOnDebugListener <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+                 _listener <span class="asOperator">=</span> _nlist;
+                 _listener.addOnDebugListener <span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+            
+            
+            <span class="asDoc">/**
+             Реализация интерфейса IListenerOnDebug
+            */</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> onDebug <span class="asBracket">(</span>record <span class="asOperator">:</span> SmallDebugRecord<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asVar">var</span> mc <span class="asOperator">:</span> MovieClip <span class="asOperator">=</span> MovieClip<span class="asBracket">(</span>content<span class="asBracket">)</span>;
+                <span class="asVar">var</span> loa <span class="asOperator">:</span> Loader <span class="asOperator">=</span> mc.getChildAt<span class="asBracket">(</span>0<span class="asBracket">)</span> <span class="asReserved">as</span> Loader;
+                <span class="asVar">var</span> DoRotate <span class="asOperator">:</span>Function <span class="asOperator">=</span> loa.content<span class="asBracket">[</span><span class="asString">&apos;DoRotate&apos;</span><span class="asBracket">]</span> <span class="asReserved">as</span> Function;
+                DoRotate.call<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            
+        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+<span class="mxmlComponent">&lt;/mx:SWFLoader&gt;</span></pre></body>
+</html>

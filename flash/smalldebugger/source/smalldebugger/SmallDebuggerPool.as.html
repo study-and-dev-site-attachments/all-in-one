@@ -1,0 +1,183 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>SmallDebuggerPool.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asDoc">/**
+ * SmallDebugServer (http://black-zorro.com/mediawiki/proj_smallflexdebugger)
+ * @author Nikolai Gishkevich aka black zorro
+*/</span>
+<span class="asPackage">package</span> smalldebugger
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> mx.collections.ArrayCollection;
+    <span class="asReserved">import</span> flash.net.LocalConnection;
+    <span class="asReserved">import</span> mx.controls.Alert;
+    <span class="asDoc">/**
+     * Класс хранящий пул серверов журналирования
+     */</span> 
+    <span class="asReserved">public</span> <span class="asClass">class</span> SmallDebuggerPool
+    <span class="asBracket">{</span>
+        <span class="asDoc">/**
+         * Ссылка на объект LocalConnection - &quot;сердце системы ловли багов&quot;
+         */</span> 
+        <span class="asReserved">private</span> <span class="asVar">var</span> lc<span class="asOperator">:</span>LocalConnection <span class="asOperator">=</span> <span class="asReserved">new</span> LocalConnection<span class="asBracket">()</span>;
+                
+        <span class="asDoc">/**
+         * Список доступных сессий 
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> sessions <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asReserved">new</span> Array <span class="asBracket">()</span>;
+        
+        <span class="asDoc">/**
+         * Ссылка на сервер-заглушку, всегда есть один сервер который изначально поставляет данные для компонента визуализации
+         */</span> 
+        <span class="asReserved">private</span> <span class="asVar">var</span> loc_default_srv <span class="asOperator">:</span> SmallDebugServer <span class="asOperator">=</span> <span class="asReserved">new</span> SmallDebugServer <span class="asBracket">()</span>;
+        
+        <span class="asDoc">/**
+        *  Ссылка на текущий сервер из пула доступных
+        */</span>         
+        <span class="asReserved">private</span> <span class="asVar">var</span> loc_current_srv <span class="asOperator">:</span> SmallDebugServer <span class="asOperator">=</span> <span class="asReserved">null</span>;        
+        
+        <span class="asDoc">/**
+         * Свойство GET &quot;текущий сервер&quot; если нет текущего сервера то возвращается ссылка на сервер-заглушку
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">get</span> currentServer <span class="asBracket">()</span><span class="asOperator">:</span>SmallDebugServer<span class="asBracket">{</span>
+            <span class="asReserved">return</span> loc_current_srv<span class="asOperator">==</span><span class="asReserved">null</span><span class="asOperator">?</span>loc_default_srv<span class="asOperator">:</span>loc_current_srv;
+        <span class="asBracket">}</span>
+        <span class="asDoc">/**
+         * Свойство SET &quot;текущий сервер&quot; 
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> <span class="asReserved">set</span> currentServer <span class="asBracket">(</span>server <span class="asOperator">:</span> SmallDebugServer<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            loc_current_srv<span class="asOperator">=</span> server;
+        <span class="asBracket">}</span>
+
+        <span class="asDoc">/**
+         * Вспомогательная переменная служит для хранения того сколько всего сообщений на всех серверах         
+         */</span> 
+        <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+        <span class="asReserved">public</span> <span class="asVar">var</span> qty_all <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+
+        <span class="asDoc">/**
+         * Список объектов-слушателей заинтересованных в том, чтобы получать извещения при приходе нового сообщения
+         */</span> 
+        <span class="asReserved">private</span> <span class="asVar">var</span> listeners <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;
+                
+        <span class="asDoc">/**
+         * Конструктор, выполняется создание LocalConnection с именем &quot;blz-debugserver&quot;
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> SmallDebuggerPool <span class="asBracket">(){</span>
+            lc.allowDomain<span class="asBracket">(</span><span class="asString">&quot;*&quot;</span>, <span class="asString">&quot;localhost&quot;</span><span class="asBracket">)</span>;
+            lc.allowInsecureDomain<span class="asBracket">(</span><span class="asString">&quot;*&quot;</span>, <span class="asString">&quot;localhost&quot;</span><span class="asBracket">)</span>;
+            lc.client <span class="asOperator">=</span> <span class="asReserved">this</span>;
+            lc.connect<span class="asBracket">(</span><span class="asString">&quot;blz-debugserver&quot;</span><span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- SmallDebuggerPool --
+</span>        
+        
+        <span class="asDoc">/**
+         * Функция непосредственно вызываемая из клиентского LocalConnection при отправке сообщения
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> debug <span class="asBracket">(</span>session<span class="asOperator">:</span> String, _kind <span class="asOperator">:</span> String , _message <span class="asOperator">:</span> String, _function <span class="asOperator">:</span> String, _class <span class="asOperator">:</span> String, _array <span class="asOperator">:</span> Array, _params <span class="asOperator">:</span> XML<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> sdebug<span class="asOperator">:</span> SmallDebugServer <span class="asOperator">=</span> <span class="asReserved">null</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i<span class="asOperator">&lt;</span> sessions.length; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>sessions<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;sessionname&apos;</span><span class="asBracket">]</span> <span class="asOperator">==</span> session<span class="asBracket">){</span>
+                    sdebug <span class="asOperator">=</span> sessions<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;server&apos;</span><span class="asBracket">]</span> <span class="asReserved">as</span> SmallDebugServer;
+                <span class="asBracket">}</span>
+            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>sdebug <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                sdebug <span class="asOperator">=</span> <span class="asReserved">new</span> SmallDebugServer<span class="asBracket">()</span>;
+                sessions.push<span class="asBracket">({</span>sessionname<span class="asOperator">:</span> session, server <span class="asOperator">:</span> sdebug<span class="asBracket">})</span>;
+                sdebug.startDebug<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            <span class="asVar">var</span> rec <span class="asOperator">:</span> SmallDebugRecord <span class="asOperator">=</span> <span class="asReserved">new</span> SmallDebugRecord <span class="asBracket">(</span>sdebug, _kind, _message, _function , _class, _array, _params<span class="asBracket">)</span>;
+            sdebug.debug<span class="asBracket">(</span>rec<span class="asBracket">)</span>;
+            qty_all<span class="asOperator">++</span>;
+            fireOnDebugEvent<span class="asBracket">(</span>rec<span class="asBracket">)</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- debug --
+</span>        
+        <span class="asDoc">/**
+         * Очистка журнала текущего сервера
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> clearLogForCurrentServer <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            qty_all <span class="asOperator">-=</span> currentServer.qty_all;
+            currentServer.qty_all <span class="asOperator">=</span> 0;
+            currentServer.qty_warn <span class="asOperator">=</span> 0;
+            currentServer.qty_info <span class="asOperator">=</span> 0;
+            currentServer.qty_fatal <span class="asOperator">=</span> 0;                                                
+            currentServer.qty_debug <span class="asOperator">=</span> 0;                                                            
+            currentServer.qty_error <span class="asOperator">=</span> 0;                                                                        
+            currentServer.debugList.removeAll<span class="asBracket">()</span>;
+        <span class="asBracket">}</span><span class="asComment">// end of -- clearLogForCurrentServer ---
+</span>
+        <span class="asDoc">/**
+         * Очистка журнала текущего сервера
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> clearLogForAllServers <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> sessions.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> sdebug <span class="asOperator">:</span> SmallDebugServer <span class="asOperator">=</span> sessions<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;server&apos;</span><span class="asBracket">]</span> <span class="asReserved">as</span> SmallDebugServer;
+                qty_all <span class="asOperator">-=</span> sdebug.qty_all;
+                sdebug.qty_all <span class="asOperator">=</span> 0;
+                sdebug.qty_warn <span class="asOperator">=</span> 0;
+                sdebug.qty_info <span class="asOperator">=</span> 0;
+                sdebug.qty_fatal <span class="asOperator">=</span> 0;                                                
+                sdebug.qty_debug <span class="asOperator">=</span> 0;                                                            
+                sdebug.qty_error <span class="asOperator">=</span> 0;                                                                        
+                sdebug.debugList.removeAll<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end for
+</span>        <span class="asBracket">}</span><span class="asComment">// end of -- clearLogForCurrentServer ---
+</span>        
+        
+        
+        
+        
+        <span class="asDoc">/**
+         * На основании имени сессии делает сервер с указанным именем активным
+         * @param session собственно имя сессии
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> modifyCurrentServer <span class="asBracket">(</span>session <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i<span class="asOperator">&lt;</span> sessions.length; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>sessions<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;sessionname&apos;</span><span class="asBracket">]</span> <span class="asOperator">==</span> session<span class="asBracket">){</span>
+                    currentServer<span class="asOperator">=</span> sessions<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;server&apos;</span><span class="asBracket">]</span> <span class="asReserved">as</span> SmallDebugServer;
+                <span class="asBracket">}</span>
+            
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asDoc">/**
+         * Функция удаляющая из списка подписчиков объект-слушатель
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> removeOnDebugListener <span class="asBracket">(</span>list <span class="asOperator">:</span> IListenerOnDebug<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>listeners<span class="asOperator">!=</span><span class="asReserved">null</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> idx <span class="asOperator">:</span> int <span class="asOperator">=</span> listeners.getItemIndex<span class="asBracket">(</span>list<span class="asBracket">)</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>idx <span class="asOperator">&gt;=</span> 0<span class="asBracket">)</span>
+                    listeners.removeItemAt<span class="asBracket">(</span>idx<span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         * Функция добавляющая в список подписчиков объект-слушатель
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> addOnDebugListener <span class="asBracket">(</span>list<span class="asOperator">:</span> IListenerOnDebug<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>listeners<span class="asOperator">!=</span><span class="asReserved">null</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> idx <span class="asOperator">:</span> int <span class="asOperator">=</span> listeners.getItemIndex<span class="asBracket">(</span>list<span class="asBracket">)</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>idx <span class="asOperator">==</span> <span class="asOperator">-</span>1<span class="asBracket">)</span>
+                    listeners.addItem<span class="asBracket">(</span>list<span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+        <span class="asBracket">}</span>
+        <span class="asDoc">/**
+         * Функция вызываемая каждый раз, когда пришло сообщение, и которая в свою очередь выполняет рассылку извещений
+         * всем объектам-подписчикам
+         */</span> 
+        <span class="asReserved">public</span> <span class="asFunction">function</span> fireOnDebugEvent <span class="asBracket">(</span>rec <span class="asOperator">:</span> SmallDebugRecord<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>listeners<span class="asOperator">!=</span><span class="asReserved">null</span><span class="asBracket">){</span>
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> listeners.length; i<span class="asOperator">++</span><span class="asBracket">)</span>
+                    <span class="asBracket">(</span>listeners.getItemAt<span class="asBracket">(</span>i<span class="asBracket">)</span> <span class="asReserved">as</span> IListenerOnDebug<span class="asBracket">)</span>.onDebug<span class="asBracket">(</span>rec<span class="asBracket">)</span>;
+            <span class="asBracket">}</span>            
+        <span class="asBracket">}</span>
+    <span class="asBracket">}</span><span class="asComment">// end of -- CLASS --
+</span><span class="asBracket">}</span><span class="asComment">//end of -- PACKAGE --</span></pre></body>
+</html>

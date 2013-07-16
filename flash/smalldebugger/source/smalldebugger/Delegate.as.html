@@ -1,0 +1,26 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>Delegate.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> smalldebugger
+<span class="asBracket">{</span>
+    <span class="asReserved">public</span> <span class="asClass">class</span> Delegate
+    <span class="asBracket">{</span>
+        <span class="asComment">// Create a wrapper for a callback function.
+</span>        <span class="asComment">// Tacks the additional args on to any args normally passed to the
+</span>        <span class="asComment">// callback.
+</span>        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> create<span class="asBracket">(</span>handler<span class="asOperator">:</span>Function,...args<span class="asBracket">)</span><span class="asOperator">:</span>Function
+        <span class="asBracket">{</span>
+            <span class="asReserved">return</span> <span class="asFunction">function</span><span class="asBracket">(</span>...innerArgs<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span>
+            <span class="asBracket">{</span>
+                handler.apply<span class="asBracket">(</span><span class="asReserved">this</span>,innerArgs.concat<span class="asBracket">(</span>args<span class="asBracket">))</span>;
+            <span class="asBracket">}</span>
+        <span class="asBracket">}</span><span class="asComment">// -- end of -- create -- 
+</span>    <span class="asBracket">}</span><span class="asComment">// end of -- CLASS
+</span><span class="asBracket">}</span><span class="asComment">// -- end of PACKAGE</span></pre></body>
+</html>

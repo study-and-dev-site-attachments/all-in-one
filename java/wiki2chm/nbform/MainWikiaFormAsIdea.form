@@ -1,0 +1,543 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns="http://www.intellij.com/uidesigner/form/" version="1" bind-to-class="nbform.MainWikiaFormAsIdea">
+  <grid id="27dc6" binding="megapane" layout-manager="GridBagLayout">
+    <constraints>
+      <xy x="20" y="20" width="773" height="638"/>
+    </constraints>
+    <properties>
+      <preferredSize width="860" height="640"/>
+    </properties>
+    <border type="none"/>
+    <children>
+      <tabbedpane id="19791" binding="pages_main">
+        <constraints>
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+            <preferred-size width="200" height="200"/>
+          </grid>
+          <gridbag weightx="1.0" weighty="1.0"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <grid id="64e96" binding="tab_config" layout-manager="FormLayout">
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="top:100px:noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="top:p:noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="top:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="top:40px:noGrow"/>
+            <rowspec value="top:5dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="top:p:noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <rowspec value="top:4dlu:noGrow"/>
+            <rowspec value="center:30px:noGrow"/>
+            <rowspec value="top:32px:noGrow"/>
+            <rowspec value="center:max(d;4px):noGrow"/>
+            <colspec value="fill:10px:noGrow"/>
+            <colspec value="left:4dlu:noGrow"/>
+            <colspec value="fill:max(d;4px):noGrow"/>
+            <colspec value="left:4dlu:noGrow"/>
+            <colspec value="fill:d:grow"/>
+            <colspec value="left:4dlu:noGrow"/>
+            <colspec value="fill:160px:noGrow"/>
+            <colspec value="left:4dlu:noGrow"/>
+            <colspec value="fill:max(d;4px):noGrow"/>
+            <colspec value="left:4dlu:noGrow"/>
+            <colspec value="fill:max(d;4px):noGrow"/>
+            <constraints>
+              <tabbedpane title="Настройки" icon="nbform/assets/attach24.png"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="87c85" class="javax.swing.JTextField" binding="txtServerName">
+                <constraints>
+                  <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties>
+                  <text value="http://center:89/mediawiki/"/>
+                </properties>
+              </component>
+              <component id="d785d" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="87c85"/>
+                  <text value="Имя сервера Wiki"/>
+                </properties>
+              </component>
+              <component id="1dbe7" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="f8666"/>
+                  <text value="Имя страницы &quot;Список всех страниц&quot;"/>
+                </properties>
+              </component>
+              <component id="f8666" class="javax.swing.JTextField" binding="txtAllPagesWikiName">
+                <constraints>
+                  <grid row="2" column="4" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties>
+                  <text value="index.php/%D0%A1%D0%BB%D1%83%D0%B6%D0%B5%D0%B1%D0%BD%D0%B0%D1%8F:Allpages"/>
+                </properties>
+              </component>
+              <component id="893bd" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="51895"/>
+                  <text value="Сохранить результаты куда?"/>
+                </properties>
+              </component>
+              <component id="51895" class="javax.swing.JTextField" binding="txtOutputDir">
+                <constraints>
+                  <grid row="4" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties>
+                  <text value="output/"/>
+                </properties>
+              </component>
+              <component id="f49cb" class="javax.swing.JButton" binding="btnSelectOutputDir">
+                <constraints>
+                  <grid row="4" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Выбрать каталог"/>
+                </properties>
+              </component>
+              <component id="198e6" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="7003a"/>
+                  <text value="Кодировка (входная и выходная)"/>
+                </properties>
+              </component>
+              <component id="7003a" class="javax.swing.JComboBox" binding="comboCharSetIn">
+                <constraints>
+                  <grid row="6" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="17485" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="eb407"/>
+                  <text value="Имя каталога в котором на сервера размещена wiki"/>
+                </properties>
+              </component>
+              <component id="eb407" class="javax.swing.JTextField" binding="txtCatalogWikiName">
+                <constraints>
+                  <grid row="8" column="4" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties>
+                  <text value="/mediawiki/"/>
+                </properties>
+              </component>
+              <component id="f67f7" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="631b6"/>
+                  <text value="XPath-выражение отбора информационного узла"/>
+                </properties>
+              </component>
+              <component id="631b6" class="javax.swing.JTextField" binding="txtXPathForContent">
+                <constraints>
+                  <grid row="10" column="4" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties>
+                  <text value="//*[name() = 'div' and @id= 'content' ]"/>
+                </properties>
+              </component>
+              <component id="d0a01" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="12" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="54b27"/>
+                  <text value="Удалить из исходного документа узлы по XPath"/>
+                </properties>
+              </component>
+              <component id="54b27" class="javax.swing.JTextArea" binding="txtDropXPathTags">
+                <constraints>
+                  <grid row="12" column="4" row-span="1" col-span="3" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="50"/>
+                  </grid>
+                  <forms defaultalign-horz="false" defaultalign-vert="false"/>
+                </constraints>
+                <properties>
+                  <text value="//* [name () = 'form' ] &#10;//* [name () = 'div' and @class='printfooter']&#10;//* [name () = 'span' and @class='editsection']&#10;//* [name () = 'div' and @id='jump-to-nav']&#10;//* [name () = 'script']&#10;//* [name () = 'style']&#10;//* [@id = 'ca-nstab-main']&#10;//* [@id = 'ca-talk']&#10;//* [@id = 'ca-edit']&#10;//* [@id = 'ca-history']&#10;//* [@id = 'pt-login']&#10;"/>
+                </properties>
+              </component>
+              <component id="1b6b8" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="22" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="310fa"/>
+                  <text value="Укажите шаблон страницы"/>
+                </properties>
+              </component>
+              <component id="310fa" class="javax.swing.JTextField" binding="txtTemplateName">
+                <constraints>
+                  <grid row="22" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties>
+                  <text value="template.html"/>
+                </properties>
+              </component>
+              <component id="1a5e2" class="javax.swing.JButton" binding="btnSelectTemplateFile">
+                <constraints>
+                  <grid row="22" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Выбрать файл"/>
+                </properties>
+              </component>
+              <grid id="25f8d" binding="paneBtnsZoneGoStop" layout-manager="FormLayout">
+                <rowspec value="fill:max(d;4px):noGrow"/>
+                <colspec value="fill:max(d;4px):noGrow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:max(d;4px):noGrow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:max(d;4px):noGrow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:d:grow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:max(d;4px):noGrow"/>
+                <constraints>
+                  <grid row="28" column="2" row-span="1" col-span="5" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="7342b" class="javax.swing.JButton" binding="btnStart">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties>
+                      <text value="Запуск"/>
+                    </properties>
+                  </component>
+                  <hspacer id="129ad">
+                    <constraints>
+                      <grid row="0" column="6" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <forms defaultalign-horz="false"/>
+                    </constraints>
+                  </hspacer>
+                  <component id="4ae18" class="javax.swing.JButton" binding="btnTagSoupSettings">
+                    <constraints>
+                      <grid row="0" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties>
+                      <text value="Настройки TagSoup"/>
+                    </properties>
+                  </component>
+                  <component id="b2f3" class="javax.swing.JButton" binding="btnStop">
+                    <constraints>
+                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties>
+                      <text value="Остановить"/>
+                    </properties>
+                  </component>
+                  <component id="31903" class="javax.swing.JButton" binding="btnSuspendResume">
+                    <constraints>
+                      <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties>
+                      <text value="Приостановить - Продолжить"/>
+                    </properties>
+                  </component>
+                </children>
+              </grid>
+              <grid id="7f7fb" layout-manager="FormLayout">
+                <rowspec value="fill:28px:noGrow"/>
+                <colspec value="fill:max(d;4px):noGrow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:84px:grow"/>
+                <colspec value="left:5dlu:noGrow"/>
+                <colspec value="fill:200px:noGrow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:max(d;4px):noGrow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:d:grow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:max(d;4px):noGrow"/>
+                <colspec value="left:4dlu:noGrow"/>
+                <colspec value="fill:d:grow"/>
+                <constraints>
+                  <grid row="30" column="2" row-span="1" col-span="5" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="2f813" class="javax.swing.JButton" binding="saveProjectAs">
+                    <constraints>
+                      <grid row="0" column="12" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties>
+                      <horizontalAlignment value="0"/>
+                      <icon value="nbform/assets/save24.png"/>
+                      <text value="Сохранить"/>
+                    </properties>
+                  </component>
+                  <component id="6df79" class="javax.swing.JTextField" binding="txtFileOfProject">
+                    <constraints>
+                      <grid row="0" column="3" row-span="1" col-span="6" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                        <preferred-size width="150" height="-1"/>
+                      </grid>
+                      <forms defaultalign-horz="false"/>
+                    </constraints>
+                    <properties/>
+                  </component>
+                  <component id="dca6b" class="javax.swing.JLabel">
+                    <constraints>
+                      <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties>
+                      <labelFor value="6df79"/>
+                      <text value="Файл проекта"/>
+                    </properties>
+                  </component>
+                  <component id="59fa6" class="javax.swing.JButton" binding="loadProjectAs">
+                    <constraints>
+                      <grid row="0" column="10" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                      <forms/>
+                    </constraints>
+                    <properties>
+                      <icon value="nbform/assets/copy_to_folder24.png"/>
+                      <text value="Загрузить"/>
+                    </properties>
+                  </component>
+                </children>
+              </grid>
+              <component id="e92cc" class="javax.swing.JButton" binding="btnTestServerPath">
+                <constraints>
+                  <grid row="0" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Проверить путь"/>
+                </properties>
+              </component>
+              <component id="8d6c2" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="14" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <labelFor value="54b27"/>
+                  <text value="Не выполнять запрос файлов по расширениям"/>
+                </properties>
+              </component>
+              <component id="a8473" class="javax.swing.JTextArea" binding="txtSkipByExtension">
+                <constraints>
+                  <grid row="14" column="4" row-span="3" col-span="3" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="50"/>
+                  </grid>
+                  <forms defaultalign-horz="false" defaultalign-vert="false"/>
+                </constraints>
+                <properties>
+                  <text value="rar,zip,pdf,exe,jar"/>
+                </properties>
+              </component>
+              <component id="4e9f7" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="16" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="(через запятую)"/>
+                </properties>
+              </component>
+              <component id="58e44" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="20" column="2" row-span="2" col-span="1" vsize-policy="0" hsize-policy="0" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms defaultalign-vert="false"/>
+                </constraints>
+                <properties>
+                  <text value="Исключить страницы в адресе которых присуствует"/>
+                </properties>
+              </component>
+              <component id="9b733" class="javax.swing.JTextArea" binding="txtSkipSpecialURLs">
+                <constraints>
+                  <grid row="18" column="4" row-span="3" col-span="3" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="50"/>
+                  </grid>
+                  <forms defaultalign-horz="false" defaultalign-vert="false"/>
+                </constraints>
+                <properties>
+                  <minimumSize width="49" height="12"/>
+                  <preferredSize width="49" height="12"/>
+                  <text value="?index=&#10;?file="/>
+                </properties>
+              </component>
+              <component id="4332c" class="javax.swing.JComboBox" binding="comboCharSetOut">
+                <constraints>
+                  <grid row="6" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="8a0e2" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="26" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Список разрешенных пространств имен (через запятую)"/>
+                </properties>
+              </component>
+              <component id="f2e64" class="javax.swing.JProgressBar" binding="pBar">
+                <constraints>
+                  <grid row="31" column="2" row-span="2" col-span="5" vsize-policy="0" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="910e9" class="javax.swing.JLabel">
+                <constraints>
+                  <grid row="24" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <text value="Разрешены ли обращения к страницам через &quot;:&quot;"/>
+                </properties>
+              </component>
+              <component id="62bf4" class="javax.swing.JComboBox" binding="comboNameSpacesPolicy">
+                <constraints>
+                  <grid row="24" column="4" row-span="1" col-span="3" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <forms/>
+                </constraints>
+                <properties>
+                  <model>
+                    <item value="Запрещены все, кроме основного пространства имен"/>
+                    <item value="Разрешены все, кроме основного пространства имен"/>
+                    <item value="Запрещены все перечисленные пространства имен"/>
+                    <item value="Разрешены все перечисленные пространства имен"/>
+                    <item value="Запрещены все перечисленные пространства имен + основное"/>
+                    <item value="Разрешены все перечисленные пространства имен + основное"/>
+                  </model>
+                  <selectedIndex value="5"/>
+                </properties>
+              </component>
+              <component id="c6ce1" class="javax.swing.JTextField" binding="txtAllowedNameSpacesList">
+                <constraints>
+                  <grid row="26" column="4" row-span="1" col-span="3" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                  <forms defaultalign-horz="false"/>
+                </constraints>
+                <properties>
+                  <text value=""/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <grid id="6b36f" binding="tab_log" layout-manager="GridBagLayout">
+            <constraints>
+              <tabbedpane title="Журнал выполнения запрошенной операции" icon="nbform/assets/download_headers24.png"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <scrollpane id="abf3b">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="1.0" weighty="1.0"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="c4ce0" class="javax.swing.JList" binding="lstLog">
+                    <constraints/>
+                    <properties/>
+                  </component>
+                </children>
+              </scrollpane>
+            </children>
+          </grid>
+        </children>
+      </tabbedpane>
+      <hspacer id="c25bf">
+        <constraints>
+          <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </hspacer>
+      <vspacer id="aab4">
+        <constraints>
+          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </vspacer>
+    </children>
+  </grid>
+</form>

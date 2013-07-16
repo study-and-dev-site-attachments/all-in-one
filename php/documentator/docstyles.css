@@ -1,0 +1,141 @@
+body {
+ font-size: 12px;
+ font-family: arial;
+}
+
+
+.heading_rog {
+ font-size: 16px;
+ font-weight: bold;
+ text-align: center;
+ 
+ margin: 10px;
+ padding: 5px;
+ 
+ border: 2px solid black;
+}
+
+
+.div_comment {
+ margin: 10px;
+ padding: 5px;
+ 
+ border: 2px solid black;
+ background-color: #AAC6E2;
+}
+
+.button {
+  font-size: 16px;
+  font-weight: bold;
+  color: orange;
+  background-color: black;
+  padding: 5px;
+  margin: 5px;
+}
+
+
+.table_from_db_params {
+ font-size: 12px;
+ font-family: arial;
+ margin-left: 100px;
+}
+
+
+.make_doc{
+}
+
+.make_doc_and_data{
+}
+
+
+.table_fields_tables_idx{
+ margin-top: 50px;
+}
+
+.table_fields_tables_idx th{
+ font-weight: bold;
+ background-color: #AAC6E2;
+ padding: 4px;
+}
+
+.div_table_start {
+ width: 250px; 
+ left:0; 
+ top:0; 
+ font-size: 12pt; 
+ color:blue; 
+ border: thin solid black; 
+ background-color: #BFDBAB;
+}
+
+.html_editor {
+ 
+}
+
+
+.div_outer_of_fields {
+ margin-top: 0px; 
+ margin-bottom: 0px; 
+ padding: 0px; 
+ margin-left: 250px;
+}
+
+.table_fields_idx {
+ border: 1px solid blue;
+ border-collapse:collapse;
+}
+
+.td_fields_br {
+  border: 1px solid black;
+}
+
+.td_fields_br_indent {
+ border-top: 1px solid black;
+ border-bottom: 1px solid black;
+ padding-left: 30px;
+}
+
+.btn_save_doc {
+   font-size: 16px;
+  font-weight: bold;
+  color: orange;
+  background-color: black;
+  padding: 5px;
+  margin: 5px;
+
+}
+
+.btn_cancel_doc {
+   font-size: 16px;
+  font-weight: bold;
+  color: orange;
+  background-color: black;
+  padding: 5px;
+  margin: 5px;
+
+}
+
+table {
+ font-size: 12px;
+ font-family: arial;
+}
+
+.msg_about_save {
+  font-size: 16px;
+  font-weight: bold;
+  color: orange;
+  background-color: black;
+  padding: 5px;
+  margin: 5px;
+
+}
+
+.msg_about_what_edit {
+  font-size: 16px;
+  font-weight: bold;
+  color: orange;
+  background-color: black;
+  padding: 5px;
+  margin: 5px;
+
+}

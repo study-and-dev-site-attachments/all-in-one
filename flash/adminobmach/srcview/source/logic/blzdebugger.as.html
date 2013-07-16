@@ -1,0 +1,309 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>blzdebugger.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asPackage">package</span> logic<span class="asBracket">{</span>
+    <span class="asReserved">import</span> flash.net.LocalConnection;
+    <span class="asReserved">import</span> mx.collections.ArrayCollection;
+    <span class="asReserved">import</span> test.BooEvent;
+    <span class="asReserved">import</span> mx.utils.StringUtil;
+    <span class="asReserved">import</span> flash.utils.describeType;
+
+    <span class="asDoc">/**
+     Класс клиент системы отладки, служит для отправки сообщений серверу
+    */</span>
+    <span class="asReserved">public</span> <span class="asClass">class</span> blzdebugger <span class="asBracket">{</span>
+        
+        <span class="asDoc">/**
+        Переменная управляющая тем активен или нет дебаг
+        */</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> IF_DEBUGGER_ACTIVE <span class="asOperator">:</span> Boolean <span class="asOperator">=</span> <span class="asReserved">true</span>;
+        
+        <span class="asDoc">/**
+         * Избирательный запрет на debug из определенных классов
+         * Есть два варианта запретов на уровне конкретного экземпляра объекта отладчика
+         * или на глобальном уровне для всех отладчиков
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asVar">var</span> obj_disallowedClasses <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection<span class="asBracket">()</span>; 
+        <span class="asReserved">protected</span> <span class="asReserved">static</span> <span class="asVar">var</span> stat_disallowedClasses <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection<span class="asBracket">()</span>;         
+        
+        <span class="asDoc">/**
+         Переменная в которой хранится строка с именем сессии
+        */</span>
+        <span class="asReserved">private</span> <span class="asVar">var</span> sessionname <span class="asOperator">:</span> String  <span class="asOperator">=</span> <span class="asString">&apos;default&apos;</span>;
+        <span class="asDoc">/**
+         Объект LocalConnection служащий для обмена сообщениями с сервером
+        */</span>
+        <span class="asReserved">private</span> <span class="asVar">var</span> sessionpipe <span class="asOperator">:</span> LocalConnection <span class="asOperator">=</span> <span class="asReserved">new</span> LocalConnection <span class="asBracket">()</span>;
+        
+        <span class="asDoc">/**
+         * Все объекты логгеры регистрируются внутри специального массива
+         */</span> 
+        <span class="asReserved">private</span> <span class="asReserved">static</span> <span class="asVar">var</span> logger_registry <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection <span class="asBracket">()</span>;
+        <span class="asDoc">/**
+         * Функция по заданному имени логгера ищет его в списке зарегистрированных объектов
+         * в случае если такого логгера нет,то возвращается null
+         * @param loggerName Имя логгера который надо найти
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> getExistsLogger <span class="asBracket">(</span>loggerName <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>blzdebugger<span class="asBracket">{</span>
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int  <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> logger_registry.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> blz <span class="asOperator">:</span> blzdebugger <span class="asOperator">=</span> logger_registry.getItemAt<span class="asBracket">(</span>i<span class="asBracket">)</span> <span class="asReserved">as</span> blzdebugger;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>blz.sessionname <span class="asOperator">==</span> loggerName<span class="asBracket">)</span>
+                    <span class="asReserved">return</span> blz;
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> <span class="asReserved">null</span>;
+        <span class="asBracket">}</span>
+        <span class="asDoc">/**
+         * Функция по заданному имени логгера ищет его в списке зарегистрированных объектов
+         * в случае если такого логгера нет, то он создается и возвращается 
+         * @param loggerName Имя логгера который надо найти
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> getExistsOrNewLogger <span class="asBracket">(</span>loggerName <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>blzdebugger<span class="asBracket">{</span>
+            <span class="asVar">var</span> blz  <span class="asOperator">:</span> blzdebugger   <span class="asOperator">=</span> getExistsLogger<span class="asBracket">(</span>loggerName<span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>blz <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> blz;
+            blz <span class="asOperator">=</span> <span class="asReserved">new</span> blzdebugger<span class="asBracket">(</span>loggerName<span class="asBracket">)</span>;
+            logger_registry.addItem<span class="asBracket">(</span>blz<span class="asBracket">)</span>;
+            <span class="asReserved">return</span> blz;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Конструктор класса клиента, получает в качестве параметра строку с именем сессии отладки
+        */</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> blzdebugger<span class="asBracket">(</span>sessionname<span class="asOperator">:</span> String<span class="asBracket">)</span> <span class="asBracket">{</span>
+            <span class="asReserved">this</span>.sessionname <span class="asOperator">=</span> sessionname;
+        <span class="asBracket">}</span>
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> disableDebugFor <span class="asBracket">(</span>className <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asOperator">!</span> obj_disallowedClasses.contains<span class="asBracket">(</span>className<span class="asBracket">))</span>
+                obj_disallowedClasses.addItem<span class="asBracket">(</span>className<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> enableDebugFor <span class="asBracket">(</span>className <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> pos <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+            pos <span class="asOperator">=</span> obj_disallowedClasses.getItemIndex<span class="asBracket">(</span>className<span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>pos <span class="asOperator">&gt;=</span> 0<span class="asBracket">)</span>
+                obj_disallowedClasses.removeItemAt<span class="asBracket">(</span>pos<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> disableGlobalDebugFor <span class="asBracket">(</span>className <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asOperator">!</span> stat_disallowedClasses.contains<span class="asBracket">(</span>className<span class="asBracket">))</span>
+                stat_disallowedClasses.addItem<span class="asBracket">(</span>className<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> enableGlobalDebugFor <span class="asBracket">(</span>className <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> pos <span class="asOperator">:</span> int <span class="asOperator">=</span> 0;
+            pos  <span class="asOperator">=</span> stat_disallowedClasses.getItemIndex<span class="asBracket">(</span>className<span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>pos <span class="asOperator">&gt;=</span> 0<span class="asBracket">)</span>
+                stat_disallowedClasses.removeItemAt<span class="asBracket">(</span>pos<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+
+
+
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> startsWith <span class="asBracket">(</span>what <span class="asOperator">:</span> String, by <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>by <span class="asOperator">==</span> <span class="asString">&quot;&quot;</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asReserved">return</span> what.substr<span class="asBracket">(</span>0, by.length<span class="asBracket">)</span> <span class="asOperator">==</span> by;
+        <span class="asBracket">}</span>
+        
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> isDisallowedClass <span class="asBracket">(</span>className <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+            <span class="asReserved">return</span> _isDisallowedClass  <span class="asBracket">(</span>className, obj_disallowedClasses<span class="asBracket">)</span> <span class="asOperator">||</span>
+                   _isDisallowedClass  <span class="asBracket">(</span>className , stat_disallowedClasses<span class="asBracket">)</span>
+            ;
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> _isDisallowedClass <span class="asBracket">(</span>className <span class="asOperator">:</span> String, disallowedClasses <span class="asOperator">:</span> ArrayCollection<span class="asBracket">)</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+            <span class="asComment">//pack1.pack2::class1
+</span>            <span class="asComment">//class2
+</span>            <span class="asComment">//*
+</span>            <span class="asComment">//class*
+</span>            <span class="asComment">//pack1.pack2.*
+</span>            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> disallowedClasses.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> cla <span class="asOperator">:</span> String <span class="asOperator">=</span> disallowedClasses.getItemAt<span class="asBracket">(</span>i<span class="asBracket">)</span> <span class="asReserved">as</span> String;
+                <span class="asVar">var</span> pos_star <span class="asOperator">:</span> int  <span class="asOperator">=</span> cla.indexOf<span class="asBracket">(</span><span class="asString">&quot;*&quot;</span><span class="asBracket">)</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>pos_star <span class="asOperator">!=</span> <span class="asOperator">-</span>1<span class="asBracket">)</span>
+                    cla <span class="asOperator">=</span> cla.substring<span class="asBracket">(</span>0, pos_star<span class="asBracket">)</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>startsWith <span class="asBracket">(</span>className, cla<span class="asBracket">)</span> <span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> <span class="asReserved">false</span>;
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asDoc">/**
+        Родовая функция служит для сбора информации об &quot;происшествии&quot; и отправляет ее серверу
+        */</span>
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> unified_send<span class="asBracket">(</span>kind<span class="asOperator">:</span> String, msg <span class="asOperator">:</span> String, rest <span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">try</span> <span class="asBracket">{</span>
+                <span class="asReserved">throw</span> <span class="asReserved">new</span> Error<span class="asBracket">(</span><span class="asString">&quot;nullexception&quot;</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span> <span class="asReserved">catch</span> <span class="asBracket">(</span>e<span class="asOperator">:</span>Error<span class="asBracket">)</span> <span class="asBracket">{</span>
+                <span class="asVar">var</span> stacktraces_clean<span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asBracket">[]</span>;
+                <span class="asVar">var</span> stacktraces <span class="asOperator">:</span> String <span class="asOperator">=</span> e.getStackTrace <span class="asBracket">()</span>;
+                
+                <span class="asVar">var</span> arrS <span class="asOperator">:</span> Array <span class="asOperator">=</span> stacktraces.split <span class="asBracket">(</span><span class="asString">&quot;\n&quot;</span><span class="asBracket">)</span>;
+        
+                arrS.splice<span class="asBracket">(</span>0,3<span class="asBracket">)</span>;
+                
+                <span class="asVar">var</span> fst_class <span class="asOperator">:</span> String, fst_function<span class="asOperator">:</span> String;
+                <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> arrS.length; i<span class="asOperator">++</span><span class="asBracket">)</span> <span class="asBracket">{</span>
+                    <span class="asVar">var</span> tmps <span class="asOperator">:</span> String <span class="asOperator">=</span> arrS<span class="asBracket">[</span>i<span class="asBracket">]</span>;
+                    <span class="asVar">var</span> regexpi <span class="asOperator">:</span> Array <span class="asOperator">=</span> tmps.match<span class="asBracket">(</span><span class="asString">/^\s*at\s*([^ ].*)$/</span><span class="asBracket">)</span>;
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>regexpi <span class="asOperator">!=</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asBracket">{</span>
+                        tmps <span class="asOperator">=</span> regexpi <span class="asBracket">[</span>1<span class="asBracket">]</span>;
+                        <span class="asReserved">if</span> <span class="asBracket">(</span>i <span class="asOperator">==</span> 0<span class="asBracket">)</span> <span class="asBracket">{</span>
+                            <span class="asVar">var</span> pos_slash<span class="asOperator">:</span>int <span class="asOperator">=</span> tmps.indexOf <span class="asBracket">(</span><span class="asString">&apos;/&apos;</span><span class="asBracket">)</span>;
+                            <span class="asVar">var</span> pos_cash<span class="asOperator">:</span>int <span class="asOperator">=</span> tmps.indexOf <span class="asBracket">(</span><span class="asString">&apos;$&apos;</span><span class="asBracket">)</span>;
+                            <span class="asReserved">if</span> <span class="asBracket">(</span>pos_slash <span class="asOperator">!=</span> <span class="asOperator">-</span>1<span class="asBracket">)</span> <span class="asBracket">{</span>
+                                fst_function <span class="asOperator">=</span>  tmps.substr<span class="asBracket">(</span>pos_slash<span class="asOperator">+</span>1<span class="asBracket">)</span>;
+                                fst_class <span class="asOperator">=</span>  tmps.substr<span class="asBracket">(</span>0, pos_slash<span class="asBracket">)</span>;
+                            <span class="asBracket">}</span>
+                            <span class="asReserved">if</span> <span class="asBracket">(</span>pos_cash <span class="asOperator">!=</span> <span class="asOperator">-</span>1<span class="asBracket">)</span> <span class="asBracket">{</span>
+                                fst_function <span class="asOperator">=</span>  tmps.substr<span class="asBracket">(</span>pos_cash<span class="asOperator">+</span>1<span class="asBracket">)</span>;
+                                fst_class <span class="asOperator">=</span>  tmps.substr<span class="asBracket">(</span>0, pos_cash<span class="asBracket">)</span>;
+                            <span class="asBracket">}</span>
+                        <span class="asBracket">}</span>
+                        stacktraces_clean.push<span class="asBracket">(</span>tmps<span class="asBracket">)</span>;
+
+                    <span class="asBracket">}</span>
+                <span class="asBracket">}</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asOperator">!</span> isDisallowedClass <span class="asBracket">(</span>fst_class<span class="asBracket">)){</span>
+                    <span class="asVar">var</span> rest2 <span class="asOperator">:</span> XML <span class="asOperator">=</span> <span class="asOperator">&lt;</span>param name<span class="asOperator">=</span><span class="asString">&quot;variables&quot;</span> <span class="asOperator">/&gt;</span>;
+                    <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> j <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; j <span class="asOperator">&lt;</span> rest.length; j<span class="asOperator">++</span><span class="asBracket">){</span>
+                        <span class="asVar">var</span> x <span class="asOperator">:</span> XML <span class="asOperator">=</span> recBuild<span class="asBracket">(</span>rest<span class="asBracket">[</span>j<span class="asBracket">])</span>;
+                        rest2.appendChild<span class="asBracket">(</span>x<span class="asBracket">)</span>;
+                    <span class="asBracket">}</span>
+                    sessionpipe.send<span class="asBracket">(</span><span class="asString">&quot;blz-debugserver&quot;</span>, <span class="asString">&quot;debug&quot;</span>, sessionname, kind, msg, fst_function, fst_class, stacktraces_clean, rest2<span class="asBracket">)</span>;
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span>
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         * Функция выполняющая форматирование объекта (все его свойства) в виде xml-документа
+         * @param obj Объект подлежащий форматированию
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> recBuild <span class="asBracket">(</span>obj <span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span>XML<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>obj <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asOperator">&lt;</span>param name<span class="asOperator">=</span><span class="asString">&quot;null&quot;</span> <span class="asOperator">/&gt;</span>;
+            <span class="asVar">var</span> x <span class="asOperator">:</span> XML <span class="asOperator">=</span> _recBuild <span class="asBracket">(</span>obj, <span class="asBracket">[])</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>x.localName<span class="asBracket">()</span> <span class="asOperator">==</span> <span class="asString">&apos;__tostring__&apos;</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> x2 <span class="asOperator">:</span> XML <span class="asOperator">=</span> <span class="asOperator">&lt;</span>param name<span class="asOperator">=</span><span class="asString">&quot;__scalar__&quot;</span> <span class="asOperator">/&gt;</span>;
+                x2.appendChild<span class="asBracket">(</span>x.children<span class="asBracket">()</span>.toString<span class="asBracket">())</span>;
+                x <span class="asOperator">=</span> x2;
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> x;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+         * Вспомогательнаф функция выполняюща форматирование объекта в виде xml
+         * @param obj Объект подлежащий форматированию
+         * @param history История объектов. Нужна для того чтобы избежать рекурсии в ходе обработки
+         */</span> 
+        <span class="asReserved">protected</span> <span class="asFunction">function</span> _recBuild <span class="asBracket">(</span>obj <span class="asOperator">:</span> Object, history <span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span>XML<span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>obj <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asReserved">null</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>history.indexOf<span class="asBracket">(</span>obj<span class="asBracket">)</span> <span class="asOperator">&gt;=</span> 0<span class="asBracket">)</span> <span class="asReserved">return</span> <span class="asOperator">&lt;</span>prop name<span class="asOperator">=</span><span class="asString">&quot;#was#&quot;</span> <span class="asOperator">/&gt;</span>;
+            <span class="asVar">var</span> x <span class="asOperator">:</span> XML <span class="asOperator">=</span> <span class="asOperator">&lt;</span>prop <span class="asOperator">/&gt;</span>;
+            <span class="asVar">var</span> cnt_props<span class="asOperator">:</span>int <span class="asOperator">=</span> 0;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> okey <span class="asOperator">:</span> Object <span class="asReserved">in</span> obj<span class="asBracket">){</span>
+                <span class="asVar">var</span> ovalue <span class="asOperator">:</span> Object <span class="asOperator">=</span> obj<span class="asBracket">[</span>okey<span class="asBracket">]</span>;
+                <span class="asVar">var</span> xprop <span class="asOperator">:</span> XML <span class="asOperator">=</span> <span class="asOperator">&lt;</span>prop <span class="asOperator">/&gt;</span>;
+                xprop.@name <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span><span class="asOperator">+</span>okey;
+                history.push<span class="asBracket">(</span>obj<span class="asBracket">)</span>;
+                <span class="asVar">var</span> tmp <span class="asOperator">:</span> XML <span class="asOperator">=</span> _recBuild<span class="asBracket">(</span>ovalue, history<span class="asBracket">)</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>tmp <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                    xprop.appendChild<span class="asBracket">(</span><span class="asString">&quot;null&quot;</span><span class="asBracket">)</span>;    
+                <span class="asBracket">}</span>
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>tmp.localName<span class="asBracket">()</span> <span class="asOperator">==</span> <span class="asString">&quot;__tostring__&quot;</span><span class="asBracket">)</span>
+                    xprop.appendChild<span class="asBracket">(</span>tmp.children<span class="asBracket">()</span>.toString<span class="asBracket">())</span>;
+                <span class="asReserved">else</span>
+                    xprop.appendChild<span class="asBracket">(</span>tmp<span class="asBracket">)</span>;
+                <span class="asBracket">}</span>
+                history.pop<span class="asBracket">()</span>;
+                x.appendChild<span class="asBracket">(</span>xprop<span class="asBracket">)</span>;
+                cnt_props<span class="asOperator">++</span>;
+            <span class="asBracket">}</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>cnt_props <span class="asOperator">==</span> 0<span class="asBracket">){</span>
+                x <span class="asOperator">=</span> <span class="asOperator">&lt;</span>__tostring__ <span class="asOperator">/&gt;</span>;
+                x.appendChild<span class="asBracket">(</span><span class="asString">&quot;&quot;</span><span class="asOperator">+</span>obj<span class="asBracket">)</span>;
+                <span class="asReserved">return</span> x;
+            <span class="asBracket">}</span>
+                
+            <span class="asReserved">return</span> x;
+        <span class="asBracket">}</span>
+            
+            
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа warn, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> warn<span class="asBracket">(</span>msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    unified_send<span class="asBracket">(</span><span class="asString">&apos;warn&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа fatal, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> fatal<span class="asBracket">(</span>msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    unified_send<span class="asBracket">(</span><span class="asString">&apos;fatal&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа info, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> info<span class="asBracket">(</span>msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span> unified_send<span class="asBracket">(</span><span class="asString">&apos;info&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа debug, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> debug<span class="asBracket">(</span>msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    unified_send<span class="asBracket">(</span><span class="asString">&apos;debug&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа error, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> error<span class="asBracket">(</span>msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    unified_send<span class="asBracket">(</span><span class="asString">&apos;error&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asComment">//----------------------------------- набор статических функций --------------------
+</span>        <span class="asDoc">/**
+        Функция отправляющая сообщение типа warn, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> warn<span class="asBracket">(</span>sessionName <span class="asOperator">:</span> String, msg<span class="asOperator">:</span>String, ...args <span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    getExistsOrNewLogger<span class="asBracket">(</span>sessionName<span class="asBracket">)</span>.unified_send<span class="asBracket">(</span><span class="asString">&apos;warn&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа fatal, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> fatal<span class="asBracket">(</span>sessionName <span class="asOperator">:</span> String,msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    getExistsOrNewLogger<span class="asBracket">(</span>sessionName<span class="asBracket">)</span>.unified_send<span class="asBracket">(</span><span class="asString">&apos;fatal&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа info, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> info<span class="asBracket">(</span>sessionName <span class="asOperator">:</span> String,msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span> getExistsOrNewLogger<span class="asBracket">(</span>sessionName<span class="asBracket">)</span>.unified_send<span class="asBracket">(</span><span class="asString">&apos;info&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа debug, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> debug<span class="asBracket">(</span>sessionName <span class="asOperator">:</span> String,msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    getExistsOrNewLogger<span class="asBracket">(</span>sessionName<span class="asBracket">)</span>.unified_send<span class="asBracket">(</span><span class="asString">&apos;debug&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asDoc">/**
+        Функция отправляющая сообщение типа error, для своей работы перевызывает функцию unified_send
+        */</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> error<span class="asBracket">(</span>sessionName <span class="asOperator">:</span> String,msg<span class="asOperator">:</span>String, ...args<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>IF_DEBUGGER_ACTIVE<span class="asBracket">)</span>    getExistsOrNewLogger<span class="asBracket">(</span>sessionName<span class="asBracket">)</span>.unified_send<span class="asBracket">(</span><span class="asString">&apos;error&apos;</span>, msg, args<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+
+    <span class="asBracket">}</span><span class="asComment">// end of CLASS
+</span><span class="asBracket">}</span><span class="asComment">// end of PACKAGE</span></pre></body>
+</html>

@@ -1,0 +1,114 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>DebuggerSaveUtils.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asDoc">/**
+ * SmallDebugServer (http://black-zorro.com/mediawiki/proj_smallflexdebugger)
+ * @author Nikolai Gishkevich aka black zorro
+*/</span>
+<span class="asPackage">package</span> smalldebugger
+<span class="asBracket">{</span>
+    <span class="asDoc">/**
+     * Класс содержит вспомогательные функции для экспорта данных
+    */</span>
+    <span class="asReserved">public</span> <span class="asClass">class</span> DebuggerSaveUtils
+    <span class="asBracket">{</span>
+        
+        <span class="asDoc">/**
+         Статическая переменная хранящая текст запроса на вставку данных внутрь таблицы-журнала
+        */</span>
+        <span class="asReserved">private</span> <span class="asReserved">static</span> <span class="asVar">var</span> SQL_INSERT_INTO <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;insert into  :logtable (kind, delta, date_of, num , message, function, class, stacktrace) &quot;</span><span class="asOperator">+</span>
+         <span class="asString">&quot;values (&apos;:kind&apos;, &apos;:delta&apos;, &apos;:date_of&apos;, &apos;:num&apos; , &apos;:message&apos;, &apos;:function&apos;, &apos;:class&apos;, &apos;:stacktrace&apos;)&quot;</span>;
+
+        <span class="asDoc">/**
+         Функция на основании полученного объекта дебаг-записи и шаблона SQL_INSERT_INTO выполняет конструирование текста sql команды
+         @param объект запись о событии debug
+         @return собственно сконструированную строку запроса
+        */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> getCompleteSQLCommandInsertInto <span class="asBracket">(</span>rec <span class="asOperator">:</span> SmallDebugRecord, tablename <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asVar">var</span> isql <span class="asOperator">:</span> String <span class="asOperator">=</span> SQL_INSERT_INTO;
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:logtable&apos;</span>, tablename<span class="asBracket">)</span>;                     
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:kind&apos;</span>, rec.a_kind<span class="asBracket">)</span>;
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:class&apos;</span>, rec.a_class<span class="asBracket">)</span>;
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:function&apos;</span>, rec.a_function<span class="asBracket">)</span>;
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:num&apos;</span>, rec.a_num<span class="asBracket">)</span>;
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:delta&apos;</span>, rec.a_delta<span class="asBracket">)</span>;
+            isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:date_of&apos;</span>, rec.a_datetime_internal<span class="asBracket">)</span>;
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:message&apos;</span>, DebuggerSaveUtils.makeSafeMySqlString<span class="asBracket">(</span> rec.a_message<span class="asBracket">)</span> <span class="asBracket">)</span>;
+             isql <span class="asOperator">=</span> isql.replace<span class="asBracket">(</span><span class="asString">&apos;:stacktrace&apos;</span>, DebuggerSaveUtils.makeSafeMySqlString<span class="asBracket">(</span> rec.a_array.join<span class="asBracket">(</span><span class="asString">&quot;, &quot;</span><span class="asBracket">))</span> <span class="asBracket">)</span>;                
+             <span class="asReserved">return</span> isql;
+        <span class="asBracket">}</span><span class="asComment">// end of -- getCompleteSQLCommandInsertInto -- 
+</span>
+        <span class="asDoc">/**
+         * Переменная хранящая код SQL выполняющий создание таблицы для журнала в базе mysql
+         */</span>
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asVar">var</span> SQL_CREATE_TABLE <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asBracket">[</span>
+              <span class="asString">&quot;id int not null auto_increment primary key&quot;</span>,
+               <span class="asString">&quot;kind enum(&apos;error&apos;, &apos;fatal&apos;, &apos;debug&apos;, &apos;info&apos;, &apos;warn&apos;)&quot;</span>,
+               <span class="asString">&quot;delta int&quot;</span>,                     
+               <span class="asString">&quot;date_of datetime&quot;</span>,
+               <span class="asString">&quot;num int&quot;</span> ,
+               <span class="asString">&quot;message text&quot;</span>,
+               <span class="asString">&quot;function varchar(100)&quot;</span>,
+               <span class="asString">&quot;class varchar(100)&quot;</span>,
+               <span class="asString">&quot;stacktrace text&quot;</span>
+        <span class="asBracket">]</span>;
+
+        
+        <span class="asDoc">/**
+         * Вспомогательная функция выполняющая формирование HTML-таблицы содержащей все записи в текущем журнале
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> asHTMLTable <span class="asBracket">(</span>s <span class="asOperator">:</span> SmallDebugServer<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asVar">var</span> rez <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&apos;&apos;</span>;
+            rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;table border=&quot;0&quot; cellpadding=&quot;0&quot; cellspacing=&quot;0&quot;&gt;&apos;</span>;
+            rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;tr&gt;&apos;</span>;
+            <span class="asVar">var</span> headers <span class="asOperator">:</span> Array <span class="asOperator">=</span> <span class="asBracket">[</span><span class="asString">&apos;kind&apos;</span>, <span class="asString">&apos;datetime&apos;</span>, <span class="asString">&apos;delta&apos;</span>, <span class="asString">&apos;num&apos;</span>, <span class="asString">&apos;message&apos;</span> ,  <span class="asString">&apos;function&apos;</span>, <span class="asString">&apos;class&apos;</span>, <span class="asString">&apos;stacktrace&apos;</span><span class="asBracket">]</span>;
+            <span class="asReserved">for</span> <span class="asReserved">each</span> <span class="asBracket">(</span><span class="asVar">var</span> ahid <span class="asOperator">:</span> String <span class="asReserved">in</span> headers<span class="asBracket">){</span>
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;center&quot; valign=&quot;top&quot; style=&quot;font-size: 14px; font-weight: bold; background-color: #cacaca;&quot;&gt;&apos;</span><span class="asOperator">+</span>ahid<span class="asOperator">+</span><span class="asString">&apos;&lt;/td&gt;&apos;</span> <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span>;                
+            <span class="asBracket">}</span>
+            rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;/tr&gt;&apos;</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> s.debugList.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> rec <span class="asOperator">:</span> SmallDebugRecord <span class="asOperator">=</span> s.debugList.getItemAt<span class="asBracket">(</span>i<span class="asBracket">)</span> <span class="asReserved">as</span> SmallDebugRecord;
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;tr&gt;&apos;</span>;
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:90px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_kind<span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:90px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_datetime<span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:90px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_delta<span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:90px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_num<span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:220px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_message<span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:120px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_function<span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:120px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_class<span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                                                                                                                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;td align=&quot;left&quot; valign=&quot;top&quot; style=&quot;width:300px;&quot;&gt;&apos;</span> <span class="asOperator">+</span> rec.a_array.join<span class="asBracket">(</span><span class="asString">&quot;; &quot;</span><span class="asBracket">)</span><span class="asOperator">+</span> <span class="asString">&apos;&lt;/td&gt;&apos;</span>;                                                                                                                                
+                rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;/tr&gt;&apos;</span>;                
+            <span class="asBracket">}</span>
+            rez <span class="asOperator">+=</span> <span class="asString">&apos;&lt;/table&gt;&apos;</span>;            
+            <span class="asReserved">return</span> rez;
+        <span class="asBracket">}</span><span class="asComment">// end of --asHTMLTable -- 
+</span>        
+        <span class="asDoc">/**
+         * Вспомогательная функция служит для создания безопасной строки mysql
+         * (экранирования кавычек одинарных и двойных)
+         * @param исходная строка
+         * @return экранированная строка
+         */</span> 
+        <span class="asReserved">public</span> <span class="asReserved">static</span> <span class="asFunction">function</span> makeSafeMySqlString <span class="asBracket">(</span>s <span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+            <span class="asVar">var</span> r <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i<span class="asOperator">:</span>int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> s.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                <span class="asVar">var</span> ch <span class="asOperator">:</span> String <span class="asOperator">=</span> s.charAt<span class="asBracket">(</span>i<span class="asBracket">)</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>ch <span class="asOperator">==</span> <span class="asString">&apos;&quot;&apos;</span><span class="asBracket">)</span>
+                    ch <span class="asOperator">=</span> <span class="asString">&apos;\&quot;&apos;</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>ch <span class="asOperator">==</span> <span class="asString">&quot;&apos;&quot;</span><span class="asBracket">)</span>
+                    ch <span class="asOperator">=</span> <span class="asString">&quot;\&apos;&quot;</span>;
+                r <span class="asOperator">+=</span> ch;    
+            <span class="asBracket">}</span>
+            <span class="asReserved">return</span> r;    
+        <span class="asBracket">}</span><span class="asComment">// end of -- makeSafeMySqlString --
+</span>        
+        
+    <span class="asBracket">}</span><span class="asComment">// end of -- CLASS --
+</span><span class="asBracket">}</span><span class="asComment">// end of -- PACKAGE --</span></pre></body>
+</html>

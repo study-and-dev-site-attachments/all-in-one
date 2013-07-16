@@ -1,0 +1,732 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>debugserver.mxml</title>
+<link rel="stylesheet" type="text/css" href="../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComment">&lt;!--</span><span class="mxmlComment">
+ * SmallDebugServer (http://black-zorro.com/mediawiki/proj_smallflexdebugger)
+ * @author Nikolai Gishkevich aka black zorro
+</span><span class="mxmlComment">--&gt;</span>
+<span class="mxmlComponent">&lt;mx:Application</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; 
+    xmlns:cmp=&quot;<span class="mxmlString">smalldebugger.*</span>&quot;
+    layout=&quot;<span class="mxmlString">absolute</span>&quot; 
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    paddingBottom=&quot;<span class="mxmlString">0</span>&quot;
+    paddingLeft=&quot;<span class="mxmlString">0</span>&quot;
+    paddingRight=&quot;<span class="mxmlString">0</span>&quot;
+    paddingTop=&quot;<span class="mxmlString">0</span>&quot;
+    width=&quot;<span class="mxmlString">100%</span>&quot;
+    height=&quot;<span class="mxmlString">100%</span>&quot;
+    resize=&quot;doResize <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;
+    implements=&quot;<span class="mxmlString">smalldebugger.IListenerOnDebug</span>&quot;
+    creationComplete=&quot;doCreateServer <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; viewSourceURL=&quot;<span class="mxmlString">srcview/index.html</span>&quot;<span class="mxmlComponent">&gt;</span>
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+            <span class="asReserved">import</span> flash.utils.setTimeout;
+            <span class="asReserved">import</span> smalldebugger.SmallDebugRecord; 
+            <span class="asReserved">import</span> com.maclema.mysql.events.ResponseEvent;
+            <span class="asReserved">import</span> com.maclema.mysql.events.SQLErrorEvent;
+            <span class="asReserved">import</span> com.maclema.mysql.events.ResultsEvent;
+            <span class="asReserved">import</span> mx.utils.StringUtil;
+            <span class="asReserved">import</span> com.maclema.mysql.crypto.PlainTextScrambler;
+            <span class="asReserved">import</span> com.maclema.mysql.<span class="asOperator">*</span>;
+            
+            <span class="asReserved">import</span> mx.rpc.events.ResultEvent;
+            <span class="asReserved">import</span> mx.collections.ArrayCollection;
+            <span class="asReserved">import</span> smalldebugger.Delegate;
+            <span class="asReserved">import</span> com.maclema.mysql.Statement;
+            <span class="asReserved">import</span> com.maclema.mysql.events.<span class="asOperator">*</span>;
+            <span class="asReserved">import</span> mx.events.CloseEvent;
+            <span class="asReserved">import</span> smalldebugger.DebuggerSaveUtils;
+            <span class="asReserved">import</span> mx.controls.Alert;
+            <span class="asReserved">import</span> smalldebugger.SmallDebuggerPool;
+            <span class="asReserved">import</span> mx.events.ListEvent;
+            <span class="asReserved">import</span> mx.events.DataGridEvent;
+            <span class="asReserved">import</span> smalldebugger.SmallDebugServer;
+            
+            
+            <span class="asDoc">/**
+             Ссылка на подключение к серверу mysql
+            */</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> con<span class="asOperator">:</span>Connection <span class="asOperator">=</span> <span class="asReserved">null</span>;
+            
+            <span class="asDoc">/**
+             Ссылка на пул серверов журналирования
+            */</span>
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> debugger <span class="asOperator">:</span> SmallDebuggerPool;
+
+
+            <span class="asDoc">/**
+             Источник данных для падающего списка с перечнем доступных на сервере баз данных
+            */</span>            
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> myprov_databases <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection<span class="asBracket">()</span>;
+
+            <span class="asDoc">/**
+             Источник данных для падающего списка с перечнем таблиц размещенных в текущей базе данных
+            */</span>            
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> myprov_tables <span class="asOperator">:</span> ArrayCollection <span class="asOperator">=</span> <span class="asReserved">new</span> ArrayCollection<span class="asBracket">()</span>;
+            
+            <span class="asDoc">/**
+             Вспомогательная переменная-признак того что подсистема перенаправления событий в сервер mysql готова для работы
+            */</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> if_ready_to_redirect_log <span class="asOperator">:</span> Boolean<span class="asOperator">=</span> <span class="asReserved">false</span>;            
+            
+            <span class="asDoc">/**
+             Вспомогательная переменная служит для хранения признака того что копирование журнала ошибок на сервер было выполнено успешно
+            */</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> if_copied_log_ok <span class="asOperator">:</span> Boolean<span class="asOperator">=</span> <span class="asReserved">false</span>;
+            
+            
+            <span class="asBracket">[</span><span class="asMetadata">Bindable</span><span class="asBracket">]</span>
+            <span class="asReserved">private</span> <span class="asVar">var</span> sandboxType <span class="asOperator">:</span> String;
+            <span class="asDoc">/**
+             Обработчик события creationComplete для приложения, выполняется создание пула серверов-журналирования и привязка обработчиков событий для &quot;пришло сообщение&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doCreateServer <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+               <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.REMOTE<span class="asBracket">)</span>
+                    sandboxType <span class="asOperator">=</span> <span class="asString">&quot;REMOTE&quot;</span>;
+               <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.LOCAL_WITH_FILE<span class="asBracket">)</span>
+                    sandboxType <span class="asOperator">=</span> <span class="asString">&quot;LOCAL_WITH_FILE&quot;</span>;
+               <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.LOCAL_WITH_NETWORK<span class="asBracket">)</span>
+                    sandboxType <span class="asOperator">=</span> <span class="asString">&quot;LOCAL_WITH_NETWORK&quot;</span>;
+               <span class="asReserved">if</span> <span class="asBracket">(</span>Security.sandboxType  <span class="asOperator">==</span> Security.LOCAL_TRUSTED<span class="asBracket">)</span>
+                    sandboxType <span class="asOperator">=</span> <span class="asString">&quot;LOCAL_TRUSTED&quot;</span>;
+               
+               <span class="asComment">// теперь создаем интерфейс
+</span>               onToggleBottomPane <span class="asBracket">(</span><span class="asReserved">null</span><span class="asBracket">)</span>;
+                    
+               <span class="asReserved">try</span><span class="asBracket">{</span>
+                 debugger <span class="asOperator">=</span> <span class="asReserved">new</span> SmallDebuggerPool <span class="asBracket">()</span>;
+                 <span class="asComment">// заполнение тестового сервера пробным набором данных
+</span>                 <span class="asComment">//debugger.currentServer.imitate();
+</span>                 debugger.addOnDebugListener<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;                 
+              <span class="asBracket">}</span>
+              <span class="asReserved">catch</span> <span class="asBracket">(</span>error<span class="asOperator">:</span>Error<span class="asBracket">){</span>
+                 box_outer.visible <span class="asOperator">=</span> <span class="asReserved">false</span>;  
+                 box_error.visible <span class="asOperator">=</span> <span class="asReserved">true</span>;
+              <span class="asBracket">}</span>
+            <span class="asBracket">}</span><span class="asComment">// end of -- doCreateServer --
+</span>            
+            <span class="asDoc">/**
+             вспомогательная функция очистки нижней панели со свойствами текущего баг-репорта
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> clearBottomPaneProps<span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                txt_num.text <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                txt_datetime.text <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                txt_delta.text <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                txt_function.text <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                txt_class.text <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                txt_message.text <span class="asOperator">=</span> <span class="asString">&quot;&quot;</span>;
+                tr_params.dataProvider <span class="asOperator">=</span> <span class="asOperator">&lt;</span>param name<span class="asOperator">=</span><span class="asString">&quot;empty&quot;</span> <span class="asOperator">/&gt;</span>;                
+                list_stacktrace.dataProvider <span class="asOperator">=</span> <span class="asBracket">[]</span>;
+            <span class="asBracket">}</span>
+            <span class="asDoc">/**
+             Обработчик события для кнопки &quot;Очистить журнал&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doClearLog <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asComment">// очистка журнала событий для текущего сервера
+</span>                debugger.clearLogForCurrentServer<span class="asBracket">()</span>;
+                clearBottomPaneProps <span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- doClearLog --
+</span>            <span class="asDoc">/**
+            * Обработчик события для кнопки &quot;Очистить все журналы&quot;
+            */</span>            
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doClearAll <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asComment">// очистка журнала событий для текущего сервера
+</span>                debugger.clearLogForAllServers<span class="asBracket">()</span>;
+                clearBottomPaneProps <span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- doClearAll --
+</span>
+
+            <span class="asDoc">/**
+            Обработчик события для чек-боксов управляющих фильтром видимых баг-репортов
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doChangeFilter <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                clearBottomPaneProps <span class="asBracket">()</span>;                
+                debugger.currentServer.filterShow_warn <span class="asOperator">=</span> chk_warn.selected;
+                debugger.currentServer.filterShow_error <span class="asOperator">=</span> chk_error.selected;
+                debugger.currentServer.filterShow_fatal <span class="asOperator">=</span> chk_fatal.selected;
+                debugger.currentServer.filterShow_info <span class="asOperator">=</span> chk_info.selected;                                                
+                debugger.currentServer.filterShow_debug <span class="asOperator">=</span> chk_debug.selected;                                                                
+                debugger.currentServer.debugList.refresh<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- doChangeFilter --
+</span>            
+            <span class="asDoc">/**
+             Функция обработчик события смены в DataGrid текущей строки (текущего баг-репорта)
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doChangeCurrentLogMessage <span class="asBracket">(</span>e<span class="asOperator">:</span> ListEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                e.rowIndex <span class="asOperator">=</span> e.rowIndex <span class="asOperator">-</span> 1;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>e.rowIndex <span class="asOperator">&gt;=</span> debugger.currentServer.debugList.length <span class="asOperator">||</span> e.rowIndex <span class="asOperator">&lt;</span> 0<span class="asBracket">){</span>
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                txt_num.text <span class="asOperator">=</span> debugger.currentServer.getParam<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_num&apos;</span><span class="asBracket">)</span>;
+                txt_datetime.text <span class="asOperator">=</span> debugger.currentServer.getParam<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_datetime&apos;</span><span class="asBracket">)</span>;
+                txt_delta.text <span class="asOperator">=</span> debugger.currentServer.getParam<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_delta&apos;</span><span class="asBracket">)</span>;
+                txt_function.text <span class="asOperator">=</span> debugger.currentServer.getParam<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_function&apos;</span><span class="asBracket">)</span>;
+                txt_class.text <span class="asOperator">=</span> debugger.currentServer.getParam<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_class&apos;</span><span class="asBracket">)</span>;
+                txt_message.text <span class="asOperator">=</span> debugger.currentServer.getParam<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_message&apos;</span><span class="asBracket">)</span>;
+                tr_params.dataProvider <span class="asOperator">=</span> debugger.currentServer.getParam<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_params&apos;</span><span class="asBracket">)</span>;
+                
+                list_stacktrace.dataProvider <span class="asOperator">=</span> debugger.currentServer.getParamTree<span class="asBracket">(</span>e.rowIndex, <span class="asString">&apos;a_stacktrace&apos;</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- doChangeCurrentLogMessage --
+</span>            
+            <span class="asDoc">/**
+             Обработчик события смена в падающем списке текущего баг-репорт сервера
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doChangeCurrentServer <span class="asBracket">(</span>e<span class="asOperator">:</span> ListEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>    
+                <span class="asVar">var</span> idx <span class="asOperator">:</span> int <span class="asOperator">=</span> combo_current_debug.selectedIndex;
+                debugger.modifyCurrentServer <span class="asBracket">(</span>debugger.sessions<span class="asBracket">[</span>idx<span class="asBracket">][</span><span class="asString">&apos;sessionname&apos;</span><span class="asBracket">])</span> ;
+                doChangeFilter <span class="asBracket">(</span>e<span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- doChangeCurrentServer --
+</span>            
+            
+            <span class="asDoc">/**
+            * Обработчик ситуации изменения размера окна приложения
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> doResize <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                setTimeout<span class="asBracket">(</span>onToggleBottomPane, 500, e<span class="asBracket">)</span>;
+            <span class="asBracket">}</span>
+            <span class="asDoc">/**
+             Обработчик события изменения размеров нижней панели и размеров DataGrid с перечнем баг-репортов
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onToggleBottomPane <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>btn_toggle_bottom.selected<span class="asBracket">){</span>
+                    pane_bottom.height <span class="asOperator">=</span> 340;    
+                    gridlog.height <span class="asOperator">=</span> height <span class="asOperator">-</span> 450;
+                <span class="asBracket">}</span>
+                <span class="asReserved">else</span><span class="asBracket">{</span>
+                    pane_bottom.height <span class="asOperator">=</span> 70;
+                    gridlog.height <span class="asOperator">=</span> height <span class="asOperator">-</span> 180;                    
+                <span class="asBracket">}</span>
+            <span class="asBracket">}</span><span class="asComment">// end of -- onToggleBottomPane --
+</span>            
+            <span class="asDoc">/**
+             Обработчик события для кнопки &quot;Сохранить как HTML-таблицу&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onSaveAsExcel <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asVar">var</span> s <span class="asOperator">:</span> String <span class="asOperator">=</span> DebuggerSaveUtils.asHTMLTable<span class="asBracket">(</span>debugger.currentServer<span class="asBracket">)</span>;
+                System.setClipboard<span class="asBracket">(</span>s<span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onSaveAsExcel --
+</span>
+            <span class="asDoc">/**
+             Обработчик события для кнопки &quot;Сохранить весь журнал ошибок внутрь базы mysql&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onSaveAsMysql <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asOperator">!</span> onTestMysqlProps <span class="asBracket">())</span> <span class="asReserved">return</span>;                                
+                con <span class="asOperator">=</span> getConnection<span class="asBracket">()</span>;
+                con.addEventListener<span class="asBracket">(</span>Event.CONNECT, dumplogToSQLTable<span class="asBracket">)</span>;
+                con.connect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onSaveAsExcel --
+</span>
+
+            <span class="asDoc">/**
+             Вспомогательная функция выполняющая проверку заполненности полей в форме свойств подключения к mysql-серверу
+             @return признак того что все поля были заполнены как это требуется
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onTestMysqlProps <span class="asBracket">()</span><span class="asOperator">:</span>Boolean<span class="asBracket">{</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>txt_mysql_host.text <span class="asOperator">==</span> <span class="asString">&apos;&apos;</span><span class="asBracket">){</span>
+                        mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&apos;error: mysql hostname is empty&apos;</span><span class="asBracket">)</span>;
+                        <span class="asReserved">return</span> <span class="asReserved">false</span>;
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>txt_mysql_username.text <span class="asOperator">==</span> <span class="asString">&apos;&apos;</span><span class="asBracket">){</span>
+                        mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&apos;error: mysql username is empty&apos;</span><span class="asBracket">)</span>;
+                        <span class="asReserved">return</span> <span class="asReserved">false</span>;
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>txt_mysql_userpass.text <span class="asOperator">==</span> <span class="asString">&apos;&apos;</span><span class="asBracket">){</span>
+                        <span class="asComment">//mx.controls.Alert.show(&apos;error: mysql userpass is empty&apos;);
+</span>                        <span class="asComment">//return false;
+</span>                    <span class="asBracket">}</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>txt_mysql_dbname.text <span class="asOperator">==</span> <span class="asString">&apos;&apos;</span><span class="asBracket">){</span>
+                        mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&apos;error: mysql dbname is empty&apos;</span><span class="asBracket">)</span>;
+                        <span class="asReserved">return</span> <span class="asReserved">false</span>;
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>txt_mysql_table.text <span class="asOperator">==</span> <span class="asString">&apos;&apos;</span><span class="asBracket">){</span>
+                        mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&apos;error: mysql table name is empty&apos;</span><span class="asBracket">)</span>;
+                        <span class="asReserved">return</span> <span class="asReserved">false</span>;
+                    <span class="asBracket">}</span>
+                    <span class="asReserved">return</span> <span class="asReserved">true</span>;
+            <span class="asBracket">}</span> <span class="asComment">// end of -- onTestMysqlProps  --
+</span>            
+            <span class="asDoc">/**
+             Обработчик события нажатия на кнопку &quot;Выполнить создание таблицы в текущей базе для хранения журнала баг-репортов&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onSetupMysql <span class="asBracket">(</span>e <span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                 if_ready_to_redirect_log <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                chk_autoredirect.selected <span class="asOperator">=</span> <span class="asReserved">false</span>;
+
+                <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asOperator">!</span> onTestMysqlProps <span class="asBracket">())</span> <span class="asReserved">return</span>;                
+                <span class="asVar">var</span> s <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;Realy setup mysqlserver? \n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;props: [&quot;</span> <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;host: &quot;</span> <span class="asOperator">+</span> txt_mysql_host.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;user: &quot;</span> <span class="asOperator">+</span> txt_mysql_username.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;pass: &quot;</span> <span class="asOperator">+</span> txt_mysql_userpass.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;dbname: &quot;</span> <span class="asOperator">+</span> txt_mysql_dbname.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>                                                
+                <span class="asString">&quot;auto create new table &apos;&quot;</span><span class="asOperator">+</span>txt_mysql_table.text<span class="asOperator">+</span><span class="asString">&quot;&apos; for log?&quot;</span>
+                ;
+                mx.controls.Alert.show<span class="asBracket">(</span>s,<span class="asString">&quot;mysql log setup wizard&quot;</span>, mx.controls.Alert.YES <span class="asOperator">|</span> mx.controls.Alert.NO, <span class="asReserved">null</span>, onExecuteSetup<span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onSetupMysql --
+</span>            
+            <span class="asDoc">/**
+             Вспомогательная функция выполняет создание объекта подключения к mysql-серверу на основании свойств указанных в панели внизу окна
+             Корректно обрабатывается ситуация с закрытием предудущего объекта подключения
+             @return собственно объект-подключение
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> getConnection <span class="asBracket">()</span><span class="asOperator">:</span>Connection<span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>con <span class="asOperator">!=</span> <span class="asReserved">null</span> <span class="asOperator">&amp;&amp;</span> con.isClosed<span class="asBracket">()){</span>
+                    con.disconnect<span class="asBracket">()</span>;
+                    con <span class="asOperator">=</span> <span class="asReserved">null</span>;
+                <span class="asBracket">}</span>
+                    
+                <span class="asVar">var</span> scrambler<span class="asOperator">:</span>PlainTextScrambler <span class="asOperator">=</span> <span class="asReserved">new</span> PlainTextScrambler<span class="asBracket">(</span>txt_mysql_userpass.text<span class="asBracket">)</span>;
+                <span class="asVar">var</span> h <span class="asOperator">:</span> String <span class="asOperator">=</span> txt_mysql_host.text;
+                <span class="asVar">var</span> port <span class="asOperator">:</span> int <span class="asOperator">=</span> 3306;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>h.indexOf<span class="asBracket">(</span><span class="asString">&quot;:&quot;</span><span class="asBracket">)</span><span class="asOperator">!=-</span>1<span class="asBracket">){</span>
+                    port <span class="asOperator">=</span> parseInt<span class="asBracket">(</span>h.substr<span class="asBracket">(</span>h.indexOf<span class="asBracket">(</span><span class="asString">&quot;:&quot;</span><span class="asBracket">)</span> <span class="asOperator">+</span> 1<span class="asBracket">))</span>;
+                    h <span class="asOperator">=</span> h.substr<span class="asBracket">(</span>0, h.indexOf<span class="asBracket">(</span><span class="asString">&quot;:&quot;</span><span class="asBracket">))</span>;
+                <span class="asBracket">}</span>
+                <span class="asVar">var</span> _con<span class="asOperator">:</span>Connection <span class="asOperator">=</span> <span class="asReserved">new</span> Connection<span class="asBracket">(</span>h, port , txt_mysql_username.text, scrambler, txt_mysql_dbname.text<span class="asOperator">==</span><span class="asString">&quot;&quot;</span><span class="asOperator">?</span><span class="asReserved">null</span><span class="asOperator">:</span>txt_mysql_dbname.text<span class="asBracket">)</span>;
+                _con.addEventListener<span class="asBracket">(</span>SQLErrorEvent.SQL_ERROR, onMySql_Error<span class="asBracket">)</span>;
+                <span class="asReserved">return</span> _con;
+            <span class="asBracket">}</span><span class="asComment">// end of --  getConnection --
+</span>            
+            <span class="asDoc">/**
+             Функция служит для отображения списка баз данных на сервере - является вспомогательной для функции
+             onHelpShowDBs
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> showdatabasesExecutor <span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                 <span class="asVar">var</span> st<span class="asOperator">:</span>Statement <span class="asOperator">=</span> con.createStatement<span class="asBracket">()</span>;
+                 st.addEventListener<span class="asBracket">(</span>ResultsEvent.RESULTS, onMySql_Results_showdatabases<span class="asBracket">)</span>; <span class="asComment">//FOR SELECT
+</span>                 st.executeQuery<span class="asBracket">(</span><span class="asString">&quot;SHOW DATABASES&quot;</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- showdatabasesExecutor --
+</span>            
+            <span class="asDoc">/**
+             Функция служит для отображения списка таблиц в текущей базе данных на сервере - является вспомогательной для функции
+             onHelpShowTables
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> showtablesExecutor <span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                 <span class="asVar">var</span> st<span class="asOperator">:</span>Statement <span class="asOperator">=</span> con.createStatement<span class="asBracket">()</span>;
+                 st.addEventListener<span class="asBracket">(</span>ResultsEvent.RESULTS, onMySql_Results_showtables<span class="asBracket">)</span>; <span class="asComment">//FOR SELECT
+</span>                 st.executeQuery<span class="asBracket">(</span><span class="asString">&quot;SHOW TABLES&quot;</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- showtablesExecutor --            
+</span>            
+             
+            
+            
+            <span class="asDoc">/**
+             Функция обработчик события нажатия на кнопку &quot;выполнить копирование журнала на сервер&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> dumplogToSQLTable <span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                 if_copied_log_ok  <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                 <span class="asVar">var</span> st<span class="asOperator">:</span>Statement <span class="asOperator">=</span> con.createStatement<span class="asBracket">()</span>;
+                 st.addEventListener<span class="asBracket">(</span>ResponseEvent.RESPONSE, onMySql_ResponseInsertLogRecord<span class="asBracket">)</span>; <span class="asComment">//FOR INSERT, UPDATE, etc.
+</span>                 st.addEventListener<span class="asBracket">(</span>SQLErrorEvent.SQL_ERROR, onMySql_Error<span class="asBracket">)</span>;
+                  st.executeQuery    <span class="asBracket">(</span><span class="asString">&quot;SET NAMES UTF8&quot;</span><span class="asBracket">)</span>;                 
+                 
+                 <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> debugger.currentServer.debugList.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                     <span class="asVar">var</span> rec <span class="asOperator">:</span> SmallDebugRecord <span class="asOperator">=</span> debugger.currentServer.debugList<span class="asBracket">[</span>i<span class="asBracket">]</span> <span class="asReserved">as</span> SmallDebugRecord;
+                     <span class="asVar">var</span> isql <span class="asOperator">:</span> String <span class="asOperator">=</span> DebuggerSaveUtils.getCompleteSQLCommandInsertInto <span class="asBracket">(</span>rec, txt_mysql_table.text<span class="asBracket">)</span>; 
+                     st.executeQuery    <span class="asBracket">(</span>isql<span class="asBracket">)</span>;
+                 <span class="asBracket">}</span>
+                 <span class="asReserved">if</span> <span class="asBracket">(</span>if_copied_log_ok<span class="asBracket">)</span>
+                     mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&apos;log was copied to mysql server&apos;</span><span class="asBracket">)</span>;
+                 <span class="asReserved">else</span>
+                     mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&apos;log cannot be copied to mysql server&apos;</span><span class="asBracket">)</span>;                     
+                 
+            <span class="asBracket">}</span><span class="asComment">// end of -- dumplogToSQLTable --
+</span>            
+            <span class="asDoc">/**
+             Функция завершающая создание таблицы sql для хранения журнала debug
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> setupSQLTable <span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                 <span class="asVar">var</span> st<span class="asOperator">:</span>Statement <span class="asOperator">=</span> con.createStatement<span class="asBracket">()</span>;
+                 st.addEventListener<span class="asBracket">(</span>ResponseEvent.RESPONSE, onMySql_Response<span class="asBracket">)</span>; <span class="asComment">//FOR INSERT, UPDATE, etc.
+</span>                 st.addEventListener<span class="asBracket">(</span>SQLErrorEvent.SQL_ERROR, onMySql_Error<span class="asBracket">)</span>;
+                 st.executeQuery<span class="asBracket">(</span><span class="asString">&quot;drop table if exists &quot;</span> <span class="asOperator">+</span> txt_mysql_table.text<span class="asBracket">)</span>;
+                 st.executeQuery<span class="asBracket">(</span><span class="asString">&quot;create table &quot;</span> <span class="asOperator">+</span> txt_mysql_table.text <span class="asOperator">+</span> <span class="asString">&quot; ( &quot;</span><span class="asOperator">+</span>DebuggerSaveUtils.SQL_CREATE_TABLE.join <span class="asBracket">(</span><span class="asString">&quot;, &quot;</span><span class="asBracket">)</span><span class="asOperator">+</span><span class="asString">&quot; ) default character set utf8 engine = myisam&quot;</span><span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of --  setupSQLTable --
+</span>            
+            <span class="asDoc">/**
+             Функция продолжающая работу по созданию таблицы на сервере для хранения журнала debug
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onExecuteSetup<span class="asBracket">(</span>event<span class="asOperator">:</span>CloseEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>event.detail<span class="asOperator">==</span>Alert.NO<span class="asBracket">)</span> <span class="asReserved">return</span>;
+                con <span class="asOperator">=</span> getConnection<span class="asBracket">()</span>;
+                con.addEventListener<span class="asBracket">(</span>Event.CONNECT, setupSQLTable<span class="asBracket">)</span>;
+                con.connect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onExecuteSetup --
+</span>            
+            <span class="asDoc">/**
+             Функция обработчик события нажатия на кнопку &quot;подсказка: получить список баз данных на сервере&quot;
+             вызывает функцию showdatabasesExecutor
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onHelpShowDBs <span class="asBracket">(</span>e <span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                con <span class="asOperator">=</span> getConnection<span class="asBracket">()</span>;
+                con.addEventListener<span class="asBracket">(</span>Event.CONNECT, showdatabasesExecutor<span class="asBracket">)</span>;
+                con.connect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onHelpShowDBs --
+</span>
+            <span class="asDoc">/**
+             Функция обработчик события нажатия на кнопку &quot;подсказка: получить список таблиц в текущей базе данных на сервере&quot;
+             вызывает функцию showtablesExecutor             
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onHelpShowTables <span class="asBracket">(</span>e <span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                con <span class="asOperator">=</span> getConnection<span class="asBracket">()</span>;
+                con.addEventListener<span class="asBracket">(</span>Event.CONNECT, showtablesExecutor<span class="asBracket">)</span>;
+                con.connect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onHelpShowTables --
+</span>
+            <span class="asDoc">/**
+             Функция обработчик события &quot;пришли данные&quot; для запроса на получение списка баз данных на сервере
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onMySql_Results_showdatabases<span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+             <span class="asVar">var</span> st<span class="asOperator">:</span>Statement <span class="asOperator">=</span> Statement<span class="asBracket">(</span>e.target<span class="asBracket">)</span>;
+             <span class="asVar">var</span> con<span class="asOperator">:</span>Connection <span class="asOperator">=</span> st.getConnection<span class="asBracket">()</span>;
+             <span class="asVar">var</span> rs<span class="asOperator">:</span>ResultSet <span class="asOperator">=</span> e<span class="asBracket">[</span><span class="asString">&apos;resultSet&apos;</span><span class="asBracket">]</span> <span class="asReserved">as</span> ResultSet;
+             myprov_databases.removeAll<span class="asBracket">()</span>;
+             <span class="asVar">var</span> cols <span class="asOperator">:</span> Array <span class="asOperator">=</span> rs.getColumns<span class="asBracket">()</span>;
+             <span class="asVar">var</span> fname <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asBracket">(</span>cols<span class="asBracket">[</span>0<span class="asBracket">]</span> <span class="asReserved">as</span> Field<span class="asBracket">)</span>.getName<span class="asBracket">()</span>;
+             <span class="asReserved">while</span> <span class="asBracket">(</span> rs.next<span class="asBracket">()</span> <span class="asBracket">)</span>
+              myprov_databases.addItem<span class="asBracket">(</span>rs.getString<span class="asBracket">(</span><span class="asString">&quot;Database&quot;</span><span class="asBracket">))</span>; 
+             con.disconnect<span class="asBracket">()</span>; 
+            <span class="asBracket">}</span><span class="asComment">// end of -- onMySql_Results_showdatabases --
+</span>
+            <span class="asDoc">/**
+             Функция обработчик события &quot;пришли данные&quot; для запроса на получение списка баз данных на сервере
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onMySql_Results_showtables<span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+             <span class="asVar">var</span> st<span class="asOperator">:</span>Statement <span class="asOperator">=</span> Statement<span class="asBracket">(</span>e.target<span class="asBracket">)</span>;
+             <span class="asVar">var</span> con<span class="asOperator">:</span>Connection <span class="asOperator">=</span> st.getConnection<span class="asBracket">()</span>;
+             <span class="asVar">var</span> rs<span class="asOperator">:</span>ResultSet <span class="asOperator">=</span> e<span class="asBracket">[</span><span class="asString">&apos;resultSet&apos;</span><span class="asBracket">]</span> <span class="asReserved">as</span> ResultSet;
+             myprov_tables.removeAll<span class="asBracket">()</span>;
+             <span class="asVar">var</span> cols <span class="asOperator">:</span> Array <span class="asOperator">=</span> rs.getColumns<span class="asBracket">()</span>;
+             <span class="asVar">var</span> fname <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asBracket">(</span>cols<span class="asBracket">[</span>0<span class="asBracket">]</span> <span class="asReserved">as</span> Field<span class="asBracket">)</span>.getName<span class="asBracket">()</span>;
+             <span class="asReserved">while</span> <span class="asBracket">(</span> rs.next<span class="asBracket">()</span> <span class="asBracket">)</span>
+              myprov_tables.addItem<span class="asBracket">(</span>rs.getString<span class="asBracket">(</span><span class="asString">&quot;Tables_in_&quot;</span> <span class="asOperator">+</span> txt_mysql_dbname.text<span class="asBracket">))</span>;
+             con.disconnect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onMySql_Results_showtables --
+</span>
+            <span class="asDoc">/**
+             Функция обработчик события произошел баг во время работы с сервером mysql
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onMySql_Error<span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+              if_copied_log_ok <span class="asOperator">=</span> <span class="asReserved">false</span>;
+              if_ready_to_redirect_log <span class="asOperator">=</span> <span class="asReserved">false</span>;
+              chk_autoredirect.selected <span class="asOperator">=</span> <span class="asReserved">false</span>;
+              mx.controls.Alert.show<span class="asBracket">(</span>e.toString<span class="asBracket">()</span>, <span class="asString">&quot;mysql comminication error&quot;</span><span class="asBracket">)</span>;
+              con.disconnect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+
+            <span class="asDoc">/**
+             Функция обработчик события заверешно успешно создание таблицы для хранения на сервере журнала дебаг-репортов
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onMySql_Response<span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+             mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;Ok, log table was created&quot;</span>, <span class="asString">&quot;mysql comminication status&quot;</span><span class="asBracket">)</span>;
+             con.disconnect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onMySql_Response -- 
+</span>
+
+            <span class="asDoc">/**
+             Функция обработчик события &quot;успешно была отправлена на сервер команда вставки записи&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onMySql_ResponseInsertLogRecord<span class="asBracket">(</span>e<span class="asOperator">:</span>Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>            
+            <span class="asBracket">}</span><span class="asComment">// end of -- onMySql_ResponseInsertLogRecord --
+</span>            
+            
+            
+            <span class="asDoc">/**
+                Функция обработчик события смены для checkbox управляющего автоматическим перенаправлением событий из журнала в mysql-сервер
+                для дальшейшей работы вызывает функцию onExecuteStartRedirect
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onRedirect2MysqlChanged <span class="asBracket">(</span>e <span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>chk_autoredirect.selected<span class="asBracket">){</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asOperator">!</span> onTestMysqlProps <span class="asBracket">())</span>
+                        chk_autoredirect.selected <span class="asOperator">=</span> <span class="asReserved">false</span>;                            
+                <span class="asBracket">}</span><span class="asComment">// if chk_autoredirect.selected
+</span>                <span class="asReserved">if</span> <span class="asBracket">(</span>chk_autoredirect.selected <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                    if_ready_to_redirect_log <span class="asOperator">=</span> <span class="asReserved">false</span>;
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span><span class="asComment">// if
+</span>                <span class="asComment">//if_ready_to_redirect_log = true;                             
+</span>                
+                <span class="asVar">var</span> s <span class="asOperator">:</span> String <span class="asOperator">=</span> <span class="asString">&quot;Realy redirect log messages 2 mysqlserver? \n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;props: [&quot;</span> <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;host: &quot;</span> <span class="asOperator">+</span> txt_mysql_host.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;user: &quot;</span> <span class="asOperator">+</span> txt_mysql_username.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;pass: &quot;</span> <span class="asOperator">+</span> txt_mysql_userpass.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;dbname: &quot;</span> <span class="asOperator">+</span> txt_mysql_dbname.text <span class="asOperator">+</span> <span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>                                                
+                <span class="asString">&quot;table: &quot;</span><span class="asOperator">+</span>txt_mysql_table.text<span class="asOperator">+</span><span class="asString">&quot;\n&quot;</span>
+                ;
+                mx.controls.Alert.show<span class="asBracket">(</span>s,<span class="asString">&quot;mysql log redirect wizard&quot;</span>, mx.controls.Alert.YES <span class="asOperator">|</span> mx.controls.Alert.NO, <span class="asReserved">null</span>, onExecuteStartRedirect<span class="asBracket">)</span>;
+                
+            <span class="asBracket">}</span><span class="asComment">// end of -- onRedirect2MysqlChanged --
+</span>            
+            
+            <span class="asDoc">/**
+             Функия завершающая обработку запроса на автоматическое перенаправление событий в сервер mysql
+             вызывается из функции onRedirect2MysqlChanged
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onExecuteStartRedirect<span class="asBracket">(</span>event<span class="asOperator">:</span>CloseEvent<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>event.detail<span class="asOperator">==</span>Alert.NO<span class="asBracket">)</span> <span class="asReserved">return</span>;
+                con <span class="asOperator">=</span> getConnection<span class="asBracket">()</span>;
+                con.addEventListener<span class="asBracket">(</span>Event.CONNECT, <span class="asFunction">function</span> <span class="asBracket">()</span><span class="asOperator">:</span><span class="asReserved">void</span> <span class="asBracket">{</span>
+                    if_ready_to_redirect_log <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                <span class="asBracket">})</span>;
+                con.connect<span class="asBracket">()</span>;
+            <span class="asBracket">}</span>
+            
+            <span class="asDoc">/**
+             Обработчик события от сервера журналирования &quot;пришло сообщение от клиента&quot;
+            */</span>
+            <span class="asReserved">public</span> <span class="asFunction">function</span> onDebug <span class="asBracket">(</span>rec <span class="asOperator">:</span> SmallDebugRecord<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                <span class="asReserved">if</span> <span class="asBracket">(</span>if_ready_to_redirect_log<span class="asBracket">){</span>
+                 <span class="asVar">var</span> st<span class="asOperator">:</span>Statement <span class="asOperator">=</span> con.createStatement<span class="asBracket">()</span>;
+                 st.addEventListener<span class="asBracket">(</span>ResponseEvent.RESPONSE, onMySql_ResponseInsertLogRecord<span class="asBracket">)</span>; <span class="asComment">//FOR INSERT, UPDATE, etc.
+</span>                 st.addEventListener<span class="asBracket">(</span>SQLErrorEvent.SQL_ERROR, onMySql_Error<span class="asBracket">)</span>;
+                  st.executeQuery    <span class="asBracket">(</span><span class="asString">&quot;SET NAMES UTF8&quot;</span><span class="asBracket">)</span>;
+                  <span class="asVar">var</span> isql <span class="asOperator">:</span> String <span class="asOperator">=</span> DebuggerSaveUtils.getCompleteSQLCommandInsertInto <span class="asBracket">(</span>rec, txt_mysql_table.text<span class="asBracket">)</span>; 
+                 st.executeQuery <span class="asBracket">(</span>isql<span class="asBracket">)</span>;
+                <span class="asBracket">}</span><span class="asComment">// if
+</span>            <span class="asBracket">}</span>
+            
+            <span class="asDoc">/**
+             Ресурс нужный для отображения красивой иконки в окне alert для фунцкии onAbout
+            */</span>            
+            <span class="asBracket">[</span>Embed<span class="asBracket">(</span>source<span class="asOperator">=</span><span class="asString">&quot;/assets/mail24.png&quot;</span><span class="asBracket">)]</span>
+            <span class="asReserved">public</span> <span class="asVar">var</span> ICON_mail24<span class="asOperator">:</span>Class;
+            
+            <span class="asDoc">/**
+             Функция обработчик события нажатия на кнопку &quot;О программе&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onAbout <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;author: black zorro &quot;</span><span class="asOperator">+</span><span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;provided as is&quot;</span><span class="asOperator">+</span><span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>                
+                <span class="asString">&quot;(c) 2007&quot;</span><span class="asOperator">+</span><span class="asString">&quot;\n&quot;</span><span class="asOperator">+</span>
+                <span class="asString">&quot;(http://black-zorro.com, http://black-zorro.jino-net.ru)&quot;</span>, <span class="asString">&quot;smalldebugger&quot;</span>, mx.controls.Alert.OK, <span class="asReserved">null</span>, <span class="asReserved">null</span>, ICON_mail24<span class="asBracket">)</span>;
+            <span class="asBracket">}</span><span class="asComment">// end of -- onAbout --
+</span>            
+            <span class="asDoc">/**
+             Обработчик события для кнопки &quot;Сохранить параметры подключения к mysql-серверу в SharedObject&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onSaveSetupMysqlInfo <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>            
+                <span class="asVar">var</span> mySO<span class="asOperator">:</span>SharedObject <span class="asOperator">=</span> SharedObject.getLocal<span class="asBracket">(</span><span class="asString">&quot;smalldebugserverpreferences&quot;</span><span class="asBracket">)</span>;
+                mySO.data.connection2db <span class="asOperator">=</span> <span class="asBracket">{</span>
+                    host  <span class="asOperator">:</span> txt_mysql_host.text,
+                    user  <span class="asOperator">:</span> txt_mysql_username.text,
+                    pass  <span class="asOperator">:</span> txt_mysql_userpass.text,
+                    db    <span class="asOperator">:</span> txt_mysql_dbname.text,
+                    table <span class="asOperator">:</span> txt_mysql_table.text,
+                    auto  <span class="asOperator">:</span> chk_autoredirect.selected
+                <span class="asBracket">}</span>;
+                mySO.flush<span class="asBracket">()</span>;
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;ok, settings saved&quot;</span><span class="asBracket">)</span>;                                
+            <span class="asBracket">}</span><span class="asComment">// end of -- onSaveSetupMysqlInfo --
+</span>            
+            <span class="asDoc">/**
+             Обработчик события для кнопки &quot;Загрузить параметры подключения к mysql-серверу из SharedObject&quot;
+            */</span>
+            <span class="asReserved">private</span> <span class="asFunction">function</span> onLoadSetupMysqlInfo <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>            
+                <span class="asVar">var</span> mySO<span class="asOperator">:</span>SharedObject <span class="asOperator">=</span> SharedObject.getLocal<span class="asBracket">(</span><span class="asString">&quot;smalldebugserverpreferences&quot;</span><span class="asBracket">)</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>mySO.data.connection2db <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                    mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;no settings stored on this pc&quot;</span><span class="asBracket">)</span>;
+                    <span class="asReserved">return</span>;
+                <span class="asBracket">}</span>
+                txt_mysql_host.text <span class="asOperator">=</span> mySO.data.connection2db.host;
+                txt_mysql_username.text <span class="asOperator">=</span> mySO.data.connection2db.user;
+                txt_mysql_userpass.text <span class="asOperator">=</span> mySO.data.connection2db.pass;
+                txt_mysql_dbname.text <span class="asOperator">=</span> mySO.data.connection2db.db;
+                txt_mysql_table.text <span class="asOperator">=</span>    mySO.data.connection2db.table;
+                chk_autoredirect.selected <span class="asOperator">=</span>    mySO.data.connection2db.auto;
+                
+                <span class="asReserved">if</span> <span class="asBracket">(</span>chk_autoredirect.selected<span class="asBracket">){</span>
+                    <span class="asComment">//onRedirect2MysqlChanged (e);
+</span>                <span class="asBracket">}</span>
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;ok, settings loaded&quot;</span><span class="asBracket">)</span>;                
+            <span class="asBracket">}</span><span class="asComment">// end of -- onLoadSetupMysqlInfo --
+</span>            
+            <span class="asDoc">/**
+            * Функция выполняет форматирование надписей для дерева дополнительных параметров
+            */</span>
+            <span class="asReserved">protected</span> <span class="asFunction">function</span> funcLabel <span class="asBracket">(</span>obj <span class="asOperator">:</span> XML<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+                <span class="asVar">var</span> lname <span class="asOperator">:</span> String <span class="asOperator">=</span> obj.localName<span class="asBracket">()</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>lname <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">)</span> <span class="asReserved">return</span> obj.toString<span class="asBracket">()</span>;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>lname <span class="asOperator">==</span> <span class="asString">&quot;tostring&quot;</span><span class="asBracket">)</span><span class="asReserved">return</span> obj.children<span class="asBracket">()</span>.toString<span class="asBracket">()</span>;
+                <span class="asVar">var</span> pname <span class="asOperator">:</span> XMLList <span class="asOperator">=</span> obj.@name;
+                <span class="asReserved">if</span> <span class="asBracket">(</span>pname.length<span class="asBracket">()</span> <span class="asOperator">==</span> 0<span class="asBracket">)</span> 
+                    <span class="asReserved">return</span> <span class="asString">&quot;[object]&quot;</span>;
+                <span class="asReserved">return</span> pname<span class="asBracket">[</span>0<span class="asBracket">]</span>;
+            <span class="asBracket">}</span>
+        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+    
+
+    
+    <span class="mxmlComponent">&lt;mx:VBox</span> id=&quot;<span class="mxmlString">box_outer</span>&quot; top=&quot;<span class="mxmlString">10</span>&quot; left=&quot;<span class="mxmlString">5</span>&quot; bottom=&quot;<span class="mxmlString">2</span>&quot; right=&quot;<span class="mxmlString">0</span>&quot;<span class="mxmlComponent">&gt;</span>
+        <span class="mxmlComponent">&lt;mx:HBox</span> width=&quot;<span class="mxmlString">98%</span>&quot; height=&quot;<span class="mxmlString">80</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;cmp:LogDebuggerReceiverUI</span> listener=&quot;<span class="mxmlString">{</span>debugger<span class="mxmlString">}</span>&quot;<span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">current debug</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:ComboBox</span> id=&quot;<span class="mxmlString">combo_current_debug</span>&quot; dataProvider=&quot;<span class="mxmlString">{</span>debugger.sessions<span class="mxmlString">}</span>&quot; 
+                labelField=&quot;<span class="mxmlString">sessionname</span>&quot; 
+                change=&quot;doChangeCurrentServer <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;
+                <span class="mxmlComponent">/&gt;</span>            
+
+            <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>                
+            
+            <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">statistics: sessions={</span>debugger.sessions.length<span class="mxmlString">} logs={</span>debugger.currentServer.qty_all<span class="mxmlString">} / {</span>debugger.qty_all<span class="mxmlString">}</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:Button</span> label=&quot;<span class="mxmlString">Clear Log</span>&quot;  click=&quot;doClearLog <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:Button</span> label=&quot;<span class="mxmlString">Clear All</span>&quot;  click=&quot;doClearAll <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+
+                
+                <span class="mxmlComponent">&lt;mx:Label</span> id=&quot;<span class="mxmlString">sandbox</span>&quot; text=&quot;<span class="mxmlString">sandbox type = {</span>sandboxType<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>               
+
+            
+            <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">warn</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">{</span>debugger.currentServer.qty_warn<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>            
+                    <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">chk_warn</span>&quot; change=&quot;doChangeFilter<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  selected=&quot;<span class="mxmlString">true</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:VBox&gt;</span>                
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">error</span>&quot; <span class="mxmlComponent">/&gt;</span>                
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">{</span>debugger.currentServer.qty_error<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>                            
+                    <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">chk_error</span>&quot; change=&quot;doChangeFilter<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  selected=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">/&gt;</span>                
+                <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:VBox&gt;</span>                                
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">fatal</span>&quot; <span class="mxmlComponent">/&gt;</span>                
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">{</span>debugger.currentServer.qty_fatal<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>                            
+                    <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">chk_fatal</span>&quot; change=&quot;doChangeFilter<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  selected=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">/&gt;</span>                                
+                <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:VBox&gt;</span>                                
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">info</span>&quot; <span class="mxmlComponent">/&gt;</span>                
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">{</span>debugger.currentServer.qty_info<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>                            
+                    <span class="mxmlComponent">&lt;mx:CheckBox</span>  id=&quot;<span class="mxmlString">chk_info</span>&quot; change=&quot;doChangeFilter<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  selected=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">/&gt;</span>                                                
+                <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>                
+                <span class="mxmlComponent">&lt;mx:VBox&gt;</span>                    
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">debug</span>&quot; <span class="mxmlComponent">/&gt;</span>                            
+                    <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">{</span>debugger.currentServer.qty_debug<span class="mxmlString">}</span>&quot; <span class="mxmlComponent">/&gt;</span>                            
+                    <span class="mxmlComponent">&lt;mx:CheckBox</span>  id=&quot;<span class="mxmlString">chk_debug</span>&quot; change=&quot;doChangeFilter<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  selected=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">/&gt;</span>                                                
+                <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>                
+            <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+        <span class="mxmlComponent">&lt;mx:DataGrid</span> id=&quot;<span class="mxmlString">gridlog</span>&quot; dataProvider=&quot;<span class="mxmlString">{</span>debugger.currentServer.debugList<span class="mxmlString">}</span>&quot; change=&quot;doChangeCurrentLogMessage <span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; width=&quot;<span class="mxmlString">98%</span>&quot; left=&quot;<span class="mxmlString">0</span>&quot; right=&quot;<span class="mxmlString">0</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:columns&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">#</span>&quot;  dataField=&quot;<span class="mxmlString">a_num</span>&quot; width=&quot;<span class="mxmlString">30</span>&quot;<span class="mxmlComponent">/&gt;</span>            
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">kind</span>&quot;  dataField=&quot;<span class="mxmlString">a_kind</span>&quot; width=&quot;<span class="mxmlString">50</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">datetime</span>&quot;  dataField=&quot;<span class="mxmlString">a_datetime</span>&quot; width=&quot;<span class="mxmlString">80</span>&quot;<span class="mxmlComponent">/&gt;</span>                
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">delta</span>&quot;  dataField=&quot;<span class="mxmlString">a_delta</span>&quot; width=&quot;<span class="mxmlString">60</span>&quot;<span class="mxmlComponent">/&gt;</span>                                
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">message</span>&quot;  dataField=&quot;<span class="mxmlString">a_message</span>&quot; <span class="mxmlComponent">/&gt;</span>                                
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">function</span>&quot;  dataField=&quot;<span class="mxmlString">a_function</span>&quot; width=&quot;<span class="mxmlString">200</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;mx:DataGridColumn</span> headerText=&quot;<span class="mxmlString">class</span>&quot;  dataField=&quot;<span class="mxmlString">a_class</span>&quot; width=&quot;<span class="mxmlString">200</span>&quot;<span class="mxmlComponent">/&gt;</span>                
+            <span class="mxmlComponent">&lt;/mx:columns&gt;</span>            
+        <span class="mxmlComponent">&lt;/mx:DataGrid&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Panel</span> id=&quot;<span class="mxmlString">pane_bottom</span>&quot; title=&quot;<span class="mxmlString">Properties</span>&quot; titleIcon=&quot;<span class="mxmlString">@Embed(&apos;assets/trigger24.png&apos;)</span>&quot; width=&quot;<span class="mxmlString">98%</span>&quot; bottom=&quot;<span class="mxmlString">0</span>&quot; right=&quot;<span class="mxmlString">0</span>&quot; left=&quot;<span class="mxmlString">5</span>&quot; <span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:HBox</span> paddingTop=&quot;<span class="mxmlString">5</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span>  width=&quot;<span class="mxmlString">30</span>&quot; text=&quot;<span class="mxmlString">#</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_num</span>&quot; enabled=&quot;<span class="mxmlString">false</span>&quot;  width=&quot;<span class="mxmlString">30</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span>  width=&quot;<span class="mxmlString">60</span>&quot; text=&quot;<span class="mxmlString">datetime</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_datetime</span>&quot; enabled=&quot;<span class="mxmlString">false</span>&quot;  width=&quot;<span class="mxmlString">90</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span>  width=&quot;<span class="mxmlString">40</span>&quot; text=&quot;<span class="mxmlString">delta</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_delta</span>&quot; enabled=&quot;<span class="mxmlString">false</span>&quot;  width=&quot;<span class="mxmlString">65</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:HBox&gt;</span>                
+                        <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span>  width=&quot;<span class="mxmlString">50</span>&quot; text=&quot;<span class="mxmlString">function</span>&quot;  <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_function</span>&quot; enabled=&quot;<span class="mxmlString">false</span>&quot;  width=&quot;<span class="mxmlString">180</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Label</span>  width=&quot;<span class="mxmlString">50</span>&quot; text=&quot;<span class="mxmlString">class</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_class</span>&quot; enabled=&quot;<span class="mxmlString">false</span>&quot;  width=&quot;<span class="mxmlString">180</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Label</span>  width=&quot;<span class="mxmlString">100</span>&quot; text=&quot;<span class="mxmlString">message</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:TextArea</span> id=&quot;<span class="mxmlString">txt_message</span>&quot; enabled=&quot;<span class="mxmlString">false</span>&quot;  width=&quot;<span class="mxmlString">600</span>&quot; height=&quot;<span class="mxmlString">100</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Label</span>  width=&quot;<span class="mxmlString">100</span>&quot; text=&quot;<span class="mxmlString">stacktrace</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:List</span> labelField=&quot;<span class="mxmlString">caller</span>&quot; id=&quot;<span class="mxmlString">list_stacktrace</span>&quot;   width=&quot;<span class="mxmlString">600</span>&quot; height=&quot;<span class="mxmlString">120</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                    <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+                <span class="mxmlComponent">&lt;mx:VBox&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_toggle_bottom</span>&quot; selected=&quot;<span class="mxmlString">true</span>&quot; toggle=&quot;<span class="mxmlString">true</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/field_up24.png&apos;)</span>&quot; click=&quot;onToggleBottomPane<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;  toolTip=&quot;<span class="mxmlString">show/hide bottom pane</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_save_as_xls</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/views24.png&apos;)</span>&quot; click=&quot;onSaveAsExcel<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; toolTip=&quot;<span class="mxmlString">copy 2 clipbord log as html table</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_save_as_mysql</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/db_unlock24.png&apos;)</span>&quot; click=&quot;onSaveAsMysql<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; toolTip=&quot;<span class="mxmlString">copy 2 mysql server debug records</span>&quot;<span class="mxmlComponent">/&gt;</span>                    
+                        <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_setup_mysql</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/sync_databases24.png&apos;)</span>&quot; click=&quot;onSetupMysql<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; toolTip=&quot;<span class="mxmlString">setup mysql server for receive debug records</span>&quot;<span class="mxmlComponent">/&gt;</span>                                            
+                        
+                        <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_save_2_locals_setup_mysql</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/export_data24.png&apos;)</span>&quot; click=&quot;onSaveSetupMysqlInfo<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; toolTip=&quot;<span class="mxmlString">save mysql server props 2 local storage</span>&quot;<span class="mxmlComponent">/&gt;</span>                                            
+                        <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_load_4_locals_setup_mysql</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/import_data24.png&apos;)</span>&quot; click=&quot;onLoadSetupMysqlInfo<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; toolTip=&quot;<span class="mxmlString">load mysql server props from local storage</span>&quot;<span class="mxmlComponent">/&gt;</span>                                            
+                        
+                        <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_about</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/favorites24.png&apos;)</span>&quot; click=&quot;onAbout<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; toolTip=&quot;<span class="mxmlString">about author &amp;amp; program</span>&quot;<span class="mxmlComponent">/&gt;</span>                                                                                            
+                                                
+                    <span class="mxmlComponent">&lt;/mx:HBox&gt;</span> 
+                    <span class="mxmlComponent">&lt;mx:Accordion</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">240</span>&quot;<span class="mxmlComponent">&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Canvas</span> label=&quot;<span class="mxmlString">Дополнительные параметры</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/properties_doc24.png&apos;)</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:Tree</span> id=&quot;<span class="mxmlString">tr_params</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot; labelFunction=&quot;<span class="mxmlString">funcLabel</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                        <span class="mxmlComponent">&lt;/mx:Canvas&gt;</span>
+                        <span class="mxmlComponent">&lt;mx:Canvas</span> label=&quot;<span class="mxmlString">mysql connection props</span>&quot; icon=&quot;<span class="mxmlString">@Embed(source=&apos;/assets/db_start24.png&apos;)</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+                           <span class="mxmlComponent">&lt;mx:Form</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot; paddingBottom=&quot;<span class="mxmlString">0</span>&quot; paddingLeft=&quot;<span class="mxmlString">5</span>&quot; paddingRight=&quot;<span class="mxmlString">0</span>&quot; paddingTop=&quot;<span class="mxmlString">5</span>&quot; borderThickness=&quot;<span class="mxmlString">0</span>&quot; borderStyle=&quot;<span class="mxmlString">none</span>&quot;<span class="mxmlComponent">&gt;</span>
+                            <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">auto redirect</span>&quot;<span class="mxmlComponent">&gt;</span>
+                                <span class="mxmlComponent">&lt;mx:CheckBox</span> id=&quot;<span class="mxmlString">chk_autoredirect</span>&quot; change=&quot;onRedirect2MysqlChanged<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                         
+                            <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">hostname</span>&quot;<span class="mxmlComponent">&gt;</span>
+                                <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_mysql_host</span>&quot; width=&quot;<span class="mxmlString">150</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                            <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+
+                            <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">name&amp;amp;pass</span>&quot;<span class="mxmlComponent">&gt;</span>
+                                <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                                    <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_mysql_username</span>&quot; width=&quot;<span class="mxmlString">100</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                                    <span class="mxmlComponent">&lt;mx:TextInput</span> id=&quot;<span class="mxmlString">txt_mysql_userpass</span>&quot; width=&quot;<span class="mxmlString">100</span>&quot; displayAsPassword=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                                <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>                                
+                            <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+
+
+                            <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">dbname</span>&quot;<span class="mxmlComponent">&gt;</span>
+                                <span class="mxmlComponent">&lt;mx:HBox&gt;</span>
+                                    <span class="mxmlComponent">&lt;mx:ComboBox</span> editable=&quot;<span class="mxmlString">true</span>&quot; id=&quot;<span class="mxmlString">txt_mysql_dbname</span>&quot; width=&quot;<span class="mxmlString">110</span>&quot; dataProvider=&quot;<span class="mxmlString">{</span>myprov_databases<span class="mxmlString">}</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                                    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_help_dbs_mysql</span>&quot;  label=&quot;<span class="mxmlString">list dbs</span>&quot; click=&quot;onHelpShowDBs<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                                <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>                                    
+                            <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                            
+                            <span class="mxmlComponent">&lt;mx:FormItem</span> label=&quot;<span class="mxmlString">table</span>&quot;<span class="mxmlComponent">&gt;</span>
+                                <span class="mxmlComponent">&lt;mx:HBox&gt;</span>                            
+                                    <span class="mxmlComponent">&lt;mx:ComboBox</span> editable=&quot;<span class="mxmlString">true</span>&quot; id=&quot;<span class="mxmlString">txt_mysql_table</span>&quot; width=&quot;<span class="mxmlString">110</span>&quot; dataProvider=&quot;<span class="mxmlString">{</span>myprov_tables<span class="mxmlString">}</span>&quot;<span class="mxmlComponent">/&gt;</span>                                    
+                                    <span class="mxmlComponent">&lt;mx:Button</span> id=&quot;<span class="mxmlString">btn_help_tables_mysql</span>&quot;  label=&quot;<span class="mxmlString">list tables</span>&quot; click=&quot;onHelpShowTables<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>                                
+                                <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>                                
+                            <span class="mxmlComponent">&lt;/mx:FormItem&gt;</span>
+                          <span class="mxmlComponent">&lt;/mx:Form&gt;</span>                            
+                        <span class="mxmlComponent">&lt;/mx:Canvas&gt;</span>
+                    <span class="mxmlComponent">&lt;/mx:Accordion&gt;</span>                       
+                <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:HBox&gt;</span>                            
+        <span class="mxmlComponent">&lt;/mx:Panel&gt;</span>
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>    
+    <span class="mxmlComponent">&lt;mx:VBox</span> id=&quot;<span class="mxmlString">box_error</span>&quot; visible=&quot;<span class="mxmlString">false</span>&quot; paddingLeft=&quot;<span class="mxmlString">20</span>&quot; paddingRight=&quot;<span class="mxmlString">20</span>&quot; paddingTop=&quot;<span class="mxmlString">20</span>&quot;<span class="mxmlComponent">&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Label</span> text=&quot;<span class="mxmlString">Error, cannot start debugger, LocalConnection with name &apos;blz-debugserver&apos; already started</span>&quot; <span class="mxmlComponent">/&gt;</span>
+    <span class="mxmlComponent">&lt;/mx:VBox&gt;</span>    
+        
+
+<span class="mxmlComponent">&lt;/mx:Application&gt;</span></pre></body>
+</html>

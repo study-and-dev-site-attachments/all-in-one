@@ -1,0 +1,103 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>RemotingConnection.as</title>
+<link rel="stylesheet" type="text/css" href="../../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="asComment">// ActionScript file
+</span><span class="asPackage">package</span> user_components
+<span class="asBracket">{</span>
+    <span class="asReserved">import</span> flash.net.NetConnection;
+    <span class="asReserved">import</span> flash.net.ObjectEncoding;
+    <span class="asReserved">import</span> flash.net.Responder;
+    <span class="asReserved">import</span> mx.controls.Alert;
+    <span class="asReserved">import</span> TRecordSetWrapper;
+    <span class="asReserved">import</span> mx.managers.PopUpManager;
+    <span class="asReserved">import</span> mx.core.Application;
+    <span class="asReserved">import</span> flash.display.Sprite;
+    
+
+    <span class="asReserved">public</span> <span class="asClass">class</span> RemotingConnection <span class="asReserved">extends</span> NetConnection
+    <span class="asBracket">{</span>
+        <span class="asReserved">public</span> <span class="asFunction">function</span> RemotingConnection<span class="asBracket">(</span> sURL<span class="asOperator">:</span>String <span class="asBracket">)</span>
+        <span class="asBracket">{</span>
+            objectEncoding <span class="asOperator">=</span> ObjectEncoding.AMF3;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>sURL<span class="asBracket">)</span> connect<span class="asBracket">(</span> sURL <span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> AppendToGatewayUrl<span class="asBracket">(</span> s <span class="asOperator">:</span> String <span class="asBracket">)</span> <span class="asOperator">:</span> <span class="asReserved">void</span>
+        <span class="asBracket">{</span>
+            <span class="asComment">//
+</span>        <span class="asBracket">}</span>
+        
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> call2<span class="asBracket">(</span>command<span class="asOperator">:</span>String, caller<span class="asOperator">:</span> Object,on_ok<span class="asOperator">:</span>Function ,on_fail<span class="asOperator">:</span> Function,    ... arguments<span class="asOperator">:</span> Array<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            
+            <span class="asVar">var</span> msg<span class="asOperator">:</span> RemoteCallLoaderWindow <span class="asOperator">=</span> PopUpManager.createPopUp<span class="asBracket">(</span>Sprite<span class="asBracket">(</span>Application.application<span class="asBracket">)</span>, 
+            RemoteCallLoaderWindow<span class="asBracket">)</span> <span class="asReserved">as</span> RemoteCallLoaderWindow;
+            PopUpManager.centerPopUp<span class="asBracket">(</span>msg<span class="asBracket">)</span>;
+            Application.application.enabled <span class="asOperator">=</span> <span class="asReserved">false</span>;
+
+            
+            <span class="asVar">var</span> arguments2<span class="asOperator">:</span> Object <span class="asOperator">=</span> <span class="asReserved">new</span> Object <span class="asBracket">()</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> arguments.length; i<span class="asOperator">++</span><span class="asBracket">){</span>
+                  <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> j<span class="asOperator">:</span>String <span class="asReserved">in</span> arguments<span class="asBracket">[</span>i<span class="asBracket">])</span>
+                  <span class="asBracket">{</span>
+                    arguments2<span class="asBracket">[</span>j<span class="asBracket">]</span> <span class="asOperator">=</span> arguments<span class="asBracket">[</span>i<span class="asBracket">][</span>j<span class="asBracket">]</span>;
+                  <span class="asBracket">}</span>
+            <span class="asBracket">}</span>
+            <span class="asVar">var</span> responder2 <span class="asOperator">:</span> Responder <span class="asOperator">=</span> <span class="asReserved">new</span> Responder <span class="asBracket">(</span>
+                <span class="asFunction">function</span> <span class="asBracket">(</span>param<span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                    Application.application.enabled <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                    PopUpManager.removePopUp <span class="asBracket">(</span>msg<span class="asBracket">)</span>;
+                                
+                    param <span class="asOperator">=</span> make_recursive_get_field_handler <span class="asBracket">(</span>param<span class="asBracket">)</span>;
+                    on_ok.call<span class="asBracket">(</span>caller, param<span class="asBracket">)</span>;
+                <span class="asBracket">}</span>,
+                <span class="asFunction">function</span> <span class="asBracket">(</span>param<span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+                    Application.application.enabled <span class="asOperator">=</span> <span class="asReserved">true</span>;
+                    PopUpManager.removePopUp <span class="asBracket">(</span>msg<span class="asBracket">)</span>;
+
+                    
+                    on_fail.call<span class="asBracket">(</span>caller, param<span class="asBracket">)</span>;                    
+                <span class="asBracket">}</span>
+            <span class="asBracket">)</span>;
+            <span class="asReserved">super</span>.call<span class="asBracket">(</span>command, responder2, <span class="asBracket">{</span>request<span class="asOperator">:</span> arguments2<span class="asBracket">}</span> <span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span>  make_recursive_get_field_handler <span class="asBracket">(</span>param<span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span>Object <span class="asBracket">{</span>
+             <span class="asReserved">if</span> <span class="asBracket">(</span><span class="asOperator">!</span> param<span class="asBracket">)</span> <span class="asReserved">return</span> param;
+             <span class="asReserved">if</span> <span class="asBracket">(</span>param <span class="asReserved">is</span> Object<span class="asBracket">){</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>param.hasOwnProperty<span class="asBracket">(</span><span class="asString">&quot;link_to_database&quot;</span><span class="asBracket">)){</span>
+                        param.getFieldValue <span class="asOperator">=</span> <span class="asFunction">function</span> <span class="asBracket">(</span>fieldName<span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>Object<span class="asBracket">{</span>
+                            <span class="asReserved">return</span> TRecordSetWrapper.GetFieldValue<span class="asBracket">(</span><span class="asReserved">this</span> , fieldName<span class="asBracket">)</span>;
+                        <span class="asBracket">}</span><span class="asComment">//function
+</span>                    <span class="asBracket">}</span><span class="asComment">//if
+</span>                    <span class="asReserved">try</span><span class="asBracket">{</span>
+                    param.getSimpleValue <span class="asOperator">=</span> <span class="asFunction">function</span> <span class="asBracket">(</span>propsName<span class="asOperator">:</span> String<span class="asBracket">)</span><span class="asOperator">:</span>Object<span class="asBracket">{</span>
+                        <span class="asReserved">return</span> <span class="asReserved">this</span><span class="asBracket">[</span>propsName<span class="asBracket">]</span>;
+                    <span class="asBracket">}</span><span class="asComment">//function
+</span>                    <span class="asBracket">}</span><span class="asReserved">catch</span> <span class="asBracket">(</span>err<span class="asOperator">:</span> Error<span class="asBracket">){}</span>
+                    
+                    
+              <span class="asBracket">}</span>
+              <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> s <span class="asOperator">:</span> String <span class="asReserved">in</span> param<span class="asBracket">)</span>
+                    <span class="asReserved">if</span> <span class="asBracket">(</span>param<span class="asBracket">[</span>s<span class="asBracket">]</span> <span class="asOperator">&amp;&amp;</span> <span class="asBracket">(</span>param<span class="asBracket">[</span>s<span class="asBracket">]</span> <span class="asReserved">is</span> Object<span class="asBracket">)){</span>
+                        <span class="asReserved">if</span> <span class="asBracket">(</span>param<span class="asBracket">[</span>s<span class="asBracket">]</span>.hasOwnProperty<span class="asBracket">(</span><span class="asString">&quot;link_to_database&quot;</span><span class="asBracket">)){</span>
+                            param<span class="asBracket">[</span>s<span class="asBracket">]</span> <span class="asOperator">=</span> make_recursive_get_field_handler <span class="asBracket">(</span>param<span class="asBracket">[</span>s<span class="asBracket">])</span>;
+                        <span class="asBracket">}</span><span class="asComment">//if
+</span>                   <span class="asBracket">}</span><span class="asComment">//if
+</span>              <span class="asReserved">return</span> param;
+        <span class="asBracket">}</span><span class="asComment">//function
+</span>        
+        
+        
+    <span class="asBracket">}</span>
+<span class="asBracket">}</span>
+
+</pre></body>
+</html>

@@ -1,0 +1,178 @@
+<!-- saved from url=(0014)about:internet -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<title>AnalyticsObMachAdmin.mxml</title>
+<link rel="stylesheet" type="text/css" href="../SourceStyles.css"/>
+</head>
+
+<body><pre><span class="mxmlCdata">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;</span>
+<span class="mxmlComponent">&lt;mx:Box</span> 
+    xmlns:mx=&quot;<span class="mxmlString">http://www.adobe.com/2006/mxml</span>&quot; width=&quot;<span class="mxmlString">1024</span>&quot; height=&quot;<span class="mxmlString">768</span>&quot;
+    creationPolicy=&quot;<span class="mxmlString">all</span>&quot;
+    creationComplete=&quot;onInitApp<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;
+    xmlns:user = &quot;<span class="mxmlString">user_components.*</span>&quot;
+    implements=&quot;<span class="mxmlString">mx.rpc.IResponder</span>&quot;
+    <span class="mxmlComponent">&gt;</span>
+
+    <span class="mxmlTag">&lt;mx:Script&gt;</span>
+        <span class="asOperator">&lt;!</span><span class="asBracket">[</span>CDATA<span class="asBracket">[</span>
+        <span class="asReserved">import</span> logic.blzdebugger;
+        <span class="asReserved">import</span> mx.rpc.AsyncToken;
+        <span class="asReserved">import</span> logic.SimpleDateFormatter;
+        <span class="asReserved">import</span> flash.utils.getTimer;
+        <span class="asReserved">import</span> mx.formatters.DateFormatter;
+        <span class="asReserved">import</span> logic.GlobalParams;
+        <span class="asReserved">import</span> mx.core.Application;
+        <span class="asReserved">import</span> mx.managers.PopUpManager;
+        <span class="asReserved">import</span> user_components.SimpleClockPopup;
+        <span class="asReserved">import</span> logic.IPopupWhileLoadingControl;
+        <span class="asReserved">import</span> logic.HessianDataSetEvent;
+        <span class="asReserved">import</span> hessian.client.HessianOperation;
+        <span class="asReserved">import</span> mx.events.ListEvent;
+        <span class="asReserved">import</span> mx.controls.Alert;
+        <span class="asReserved">import</span> logic.HessianDataSet;
+        <span class="asReserved">import</span> hessian.client.HessianService;
+        
+        <span class="asReserved">private</span> <span class="asVar">var</span> service_register<span class="asOperator">:</span>HessianService <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asReserved">private</span> <span class="asVar">var</span> service_login<span class="asOperator">:</span>HessianService <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asReserved">private</span> <span class="asVar">var</span> service_tries_all<span class="asOperator">:</span>HessianService <span class="asOperator">=</span> <span class="asReserved">null</span>;
+        <span class="asReserved">private</span> <span class="asVar">var</span> service_tries_ok<span class="asOperator">:</span>HessianService <span class="asOperator">=</span> <span class="asReserved">null</span>;                        
+        
+        
+        <span class="asReserved">protected</span>  <span class="asVar">var</span> logger <span class="asOperator">:</span> blzdebugger <span class="asOperator">=</span> <span class="asReserved">new</span> blzdebugger <span class="asBracket">(</span><span class="asString">&quot;AnalyticsObMach&quot;</span><span class="asBracket">)</span>;
+        
+        <span class="asReserved">public</span> <span class="asFunction">function</span> fault<span class="asBracket">(</span>info<span class="asOperator">:</span>Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;fault: &quot;</span> <span class="asOperator">+</span> info<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+
+
+        <span class="asReserved">public</span> <span class="asFunction">function</span> result<span class="asBracket">(</span>data<span class="asOperator">:</span>Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            setTimeout<span class="asBracket">(</span>onResultPlot, 500, data<span class="asBracket">)</span>;
+        <span class="asBracket">}</span>
+
+
+
+        <span class="asReserved">private</span> <span class="asFunction">function</span> onInitApp <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            service_register <span class="asOperator">=</span> <span class="asReserved">new</span> HessianService <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;analytics&quot;</span><span class="asBracket">))</span>;
+            service_login <span class="asOperator">=</span> <span class="asReserved">new</span> HessianService <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;analytics&quot;</span><span class="asBracket">))</span>;
+            service_tries_all <span class="asOperator">=</span> <span class="asReserved">new</span> HessianService <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;analytics&quot;</span><span class="asBracket">))</span>;
+            service_tries_ok <span class="asOperator">=</span> <span class="asReserved">new</span> HessianService <span class="asBracket">(</span>GlobalParams.getHessianURL<span class="asBracket">(</span><span class="asString">&quot;analytics&quot;</span><span class="asBracket">))</span>;                                    
+        <span class="asBracket">}</span>
+        
+        <span class="asReserved">private</span> <span class="asFunction">function</span> doBuildCharts <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> token_register<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span> service_register.plotChart.send <span class="asBracket">(</span><span class="asString">&quot;register&quot;</span>, dte_start.text, dte_end.text, <span class="asBracket">{})</span>;
+            <span class="asVar">var</span> token_login<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span> service_login.plotChart.send <span class="asBracket">(</span><span class="asString">&quot;login&quot;</span>, dte_start.text, dte_end.text, <span class="asBracket">{})</span>;
+            <span class="asVar">var</span> token_tries_all<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span> service_tries_all.plotChart.send <span class="asBracket">(</span><span class="asString">&quot;tries_all&quot;</span>, dte_start.text, dte_end.text, <span class="asBracket">{})</span>;
+            <span class="asVar">var</span> token_tries_ok<span class="asOperator">:</span>AsyncToken <span class="asOperator">=</span> service_tries_ok.plotChart.send <span class="asBracket">(</span><span class="asString">&quot;tries_ok&quot;</span>, dte_start.text, dte_end.text, <span class="asBracket">{})</span>;                                    
+            
+            token_register.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+            token_login.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+            token_tries_all.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+            token_tries_ok.addResponder<span class="asBracket">(</span><span class="asReserved">this</span><span class="asBracket">)</span>;
+
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asReserved">private</span> <span class="asFunction">function</span> onChangeAnyDate <span class="asBracket">(</span>e<span class="asOperator">:</span> Event<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asVar">var</span> dt_s <span class="asOperator">:</span> Date <span class="asOperator">=</span> SimpleDateFormatter.toDate<span class="asBracket">(</span>dte_start.text<span class="asBracket">)</span>;
+            <span class="asVar">var</span> dt_e <span class="asOperator">:</span> Date <span class="asOperator">=</span> SimpleDateFormatter.toDate<span class="asBracket">(</span>dte_end.text<span class="asBracket">)</span>;            
+            <span class="asReserved">if</span> <span class="asBracket">(</span>dt_s <span class="asOperator">==</span> <span class="asReserved">null</span> <span class="asOperator">||</span> dt_e <span class="asOperator">==</span> <span class="asReserved">null</span><span class="asBracket">){</span>
+                lab_diff.text <span class="asOperator">=</span><span class="asString">&quot;?&quot;</span>;                
+                <span class="asReserved">return</span>;
+            <span class="asBracket">}</span>
+            <span class="asVar">var</span> diff <span class="asOperator">:</span> Number <span class="asOperator">=</span> <span class="asBracket">(</span>dt_e.getTime<span class="asBracket">()</span> <span class="asOperator">-</span> dt_s.getTime<span class="asBracket">())</span>;
+            diff <span class="asOperator">/=</span> <span class="asBracket">(</span>1000 <span class="asOperator">*</span> 60 <span class="asOperator">*</span> 60 <span class="asOperator">*</span> 24<span class="asBracket">)</span>;
+            diff <span class="asOperator">=</span> Math.ceil <span class="asBracket">(</span>diff<span class="asBracket">)</span>;
+            lab_diff.text <span class="asOperator">=</span><span class="asString">&quot;&quot;</span><span class="asOperator">+</span> diff;
+            
+        <span class="asBracket">}</span>
+        
+        <span class="asReserved">private</span> <span class="asFunction">function</span> onResultPlot <span class="asBracket">(</span>data<span class="asOperator">:</span> Object<span class="asBracket">)</span><span class="asOperator">:</span><span class="asReserved">void</span><span class="asBracket">{</span>
+            <span class="asReserved">if</span> <span class="asBracket">(</span>data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;status&apos;</span><span class="asBracket">]</span> <span class="asOperator">==</span> <span class="asReserved">false</span><span class="asBracket">){</span>
+                mx.controls.Alert.show<span class="asBracket">(</span><span class="asString">&quot;failed: onResultPlot = &quot;</span><span class="asOperator">+</span> data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;msg&apos;</span><span class="asBracket">])</span>;
+                <span class="asReserved">return</span>;
+            <span class="asBracket">}</span>
+            <span class="asVar">var</span> chartdata <span class="asOperator">:</span> Array <span class="asOperator">=</span> data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;chartdata&apos;</span><span class="asBracket">]</span>;
+            <span class="asReserved">for</span> <span class="asBracket">(</span><span class="asVar">var</span> i <span class="asOperator">:</span> int <span class="asOperator">=</span> 0; i <span class="asOperator">&lt;</span> chartdata.length; i<span class="asOperator">++</span> <span class="asBracket">){</span>
+                chartdata<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;date_of&apos;</span><span class="asBracket">]</span> <span class="asOperator">=</span> chartdata<span class="asBracket">[</span>i<span class="asBracket">][</span><span class="asString">&apos;date_of&apos;</span><span class="asBracket">][</span><span class="asString">&apos;value&apos;</span><span class="asBracket">]</span>;
+            <span class="asBracket">}</span>
+            <span class="asVar">var</span> kind <span class="asOperator">:</span> String <span class="asOperator">=</span> data<span class="asBracket">[</span><span class="asString">&apos;result&apos;</span><span class="asBracket">][</span><span class="asString">&apos;kind&apos;</span><span class="asBracket">]</span>;
+                        
+            logger.info<span class="asBracket">(</span><span class="asString">&quot;hello&quot;</span>, kind, chartdata<span class="asBracket">)</span>;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;register&quot;</span><span class="asBracket">)</span>
+                chart_register.dataProvider <span class="asOperator">=</span>  chartdata;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;login&quot;</span><span class="asBracket">)</span>
+                chart_logins.dataProvider <span class="asOperator">=</span>  chartdata;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;tries_all&quot;</span><span class="asBracket">)</span>
+                chart_tries_all.dataProvider <span class="asOperator">=</span>  chartdata;
+            <span class="asReserved">if</span> <span class="asBracket">(</span>kind <span class="asOperator">==</span> <span class="asString">&quot;tries_ok&quot;</span><span class="asBracket">)</span>
+                chart_tries_ok.dataProvider <span class="asOperator">=</span>  chartdata;
+        <span class="asBracket">}</span>
+        
+        
+        <span class="asReserved">private</span> <span class="asFunction">function</span> funcShortDate <span class="asBracket">(</span>
+            categoryValue<span class="asOperator">:</span>Object, previousCategoryValue<span class="asOperator">:</span>Object, 
+            axis<span class="asOperator">:</span>CategoryAxis, categoryItem<span class="asOperator">:</span>Object<span class="asBracket">)</span><span class="asOperator">:</span>String<span class="asBracket">{</span>
+                <span class="asVar">var</span> d <span class="asOperator">:</span> Date <span class="asOperator">=</span> categoryValue <span class="asReserved">as</span> Date;
+            <span class="asReserved">return</span> d.getFullYear<span class="asBracket">()</span> <span class="asOperator">+</span> <span class="asString">&quot;.&quot;</span> <span class="asOperator">+</span> <span class="asBracket">(</span>d.getMonth<span class="asBracket">()</span><span class="asOperator">+</span>1<span class="asBracket">)</span> <span class="asOperator">+</span> <span class="asString">&quot;.&quot;</span> <span class="asOperator">+</span> d.getDate<span class="asBracket">()</span>;
+        <span class="asBracket">}</span>
+        <span class="asComment">// -----------------------------------------------------------
+</span>        <span class="asBracket">]]</span><span class="asOperator">&gt;</span>
+    <span class="mxmlTag">&lt;/mx:Script&gt;</span>
+    <span class="mxmlComponent">&lt;mx:Panel</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">75</span>&quot; layout=&quot;<span class="mxmlString">absolute</span>&quot; borderStyle=&quot;<span class="mxmlString">solid</span>&quot; borderThickness=&quot;<span class="mxmlString">1</span>&quot; title=&quot;<span class="mxmlString">Укажите параметры диапазона</span>&quot; horizontalAlign=&quot;<span class="mxmlString">center</span>&quot; verticalAlign=&quot;<span class="mxmlString">middle</span>&quot;<span class="mxmlComponent">&gt;</span>
+        <span class="mxmlComponent">&lt;mx:DateField</span> x=&quot;<span class="mxmlString">142</span>&quot; y=&quot;<span class="mxmlString">10</span>&quot; width=&quot;<span class="mxmlString">175</span>&quot; id=&quot;<span class="mxmlString">dte_start</span>&quot; formatString=&quot;<span class="mxmlString">YYYY.MM.DD</span>&quot; showToday=&quot;<span class="mxmlString">true</span>&quot; change=&quot;onChangeAnyDate<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;mx:DateField</span> x=&quot;<span class="mxmlString">454</span>&quot; y=&quot;<span class="mxmlString">10</span>&quot; width=&quot;<span class="mxmlString">175</span>&quot; id=&quot;<span class="mxmlString">dte_end</span>&quot; formatString=&quot;<span class="mxmlString">YYYY.MM.DD</span>&quot; showToday=&quot;<span class="mxmlString">true</span>&quot; change=&quot;onChangeAnyDate<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Label</span> x=&quot;<span class="mxmlString">10</span>&quot; y=&quot;<span class="mxmlString">12</span>&quot; text=&quot;<span class="mxmlString">Начало диапазона</span>&quot; width=&quot;<span class="mxmlString">124</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Label</span> x=&quot;<span class="mxmlString">325</span>&quot; y=&quot;<span class="mxmlString">12</span>&quot; text=&quot;<span class="mxmlString">Конец диапазона</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Button</span> x=&quot;<span class="mxmlString">655</span>&quot; y=&quot;<span class="mxmlString">10</span>&quot; label=&quot;<span class="mxmlString">Построить графики</span>&quot; width=&quot;<span class="mxmlString">176</span>&quot; id=&quot;<span class="mxmlString">btnBuildCharts</span>&quot; click=&quot;doBuildCharts<span class="asBracket">(</span>event<span class="asBracket">)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Label</span> x=&quot;<span class="mxmlString">839</span>&quot; y=&quot;<span class="mxmlString">10</span>&quot; text=&quot;<span class="mxmlString">Всего</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Label</span> x=&quot;<span class="mxmlString">882</span>&quot; y=&quot;<span class="mxmlString">10</span>&quot; text=&quot;<span class="mxmlString">0</span>&quot; id=&quot;<span class="mxmlString">lab_diff</span>&quot;<span class="mxmlComponent">/&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Label</span> x=&quot;<span class="mxmlString">925</span>&quot; y=&quot;<span class="mxmlString">10</span>&quot; text=&quot;<span class="mxmlString">Дня (ей)</span>&quot;<span class="mxmlComponent">/&gt;</span>
+    <span class="mxmlComponent">&lt;/mx:Panel&gt;</span>
+    <span class="mxmlComponent">&lt;mx:Accordion</span> width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Canvas</span> label=&quot;<span class="mxmlString">График регистраций</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:ColumnChart</span> x=&quot;<span class="mxmlString">0</span>&quot; y=&quot;<span class="mxmlString">0</span>&quot; id=&quot;<span class="mxmlString">chart_register</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;  showDataTips=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;mx:horizontalAxis&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:CategoryAxis</span> categoryField=&quot;<span class="mxmlString">date_of</span>&quot; labelFunction=&quot;<span class="mxmlString">funcShortDate</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:horizontalAxis&gt;</span>
+                <span class="mxmlComponent">&lt;mx:series&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:ColumnSeries</span> displayName=&quot;<span class="mxmlString">Series 1</span>&quot; yField=&quot;<span class="mxmlString">qty</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:series&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:ColumnChart&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:Canvas&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Canvas</span> label=&quot;<span class="mxmlString">График входов (сессий)</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:ColumnChart</span> x=&quot;<span class="mxmlString">0</span>&quot; y=&quot;<span class="mxmlString">0</span>&quot; id=&quot;<span class="mxmlString">chart_logins</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;  showDataTips=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;mx:horizontalAxis&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:CategoryAxis</span> categoryField=&quot;<span class="mxmlString">date_of</span>&quot; labelFunction=&quot;<span class="mxmlString">funcShortDate</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:horizontalAxis&gt;</span>
+                <span class="mxmlComponent">&lt;mx:series&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:ColumnSeries</span> displayName=&quot;<span class="mxmlString">Series 1</span>&quot; yField=&quot;<span class="mxmlString">qty</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:series&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:ColumnChart&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:Canvas&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Canvas</span> label=&quot;<span class="mxmlString">График активности</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:ColumnChart</span> x=&quot;<span class="mxmlString">0</span>&quot; y=&quot;<span class="mxmlString">0</span>&quot; id=&quot;<span class="mxmlString">chart_tries_all</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;  showDataTips=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;mx:horizontalAxis&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:CategoryAxis</span> categoryField=&quot;<span class="mxmlString">date_of</span>&quot; labelFunction=&quot;<span class="mxmlString">funcShortDate</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:horizontalAxis&gt;</span>
+                <span class="mxmlComponent">&lt;mx:series&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:ColumnSeries</span> displayName=&quot;<span class="mxmlString">Series 1</span>&quot; yField=&quot;<span class="mxmlString">qty</span>&quot;<span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:series&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:ColumnChart&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:Canvas&gt;</span>
+        <span class="mxmlComponent">&lt;mx:Canvas</span> label=&quot;<span class="mxmlString">График успешности</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;<span class="mxmlComponent">&gt;</span>
+            <span class="mxmlComponent">&lt;mx:ColumnChart</span> x=&quot;<span class="mxmlString">0</span>&quot; y=&quot;<span class="mxmlString">0</span>&quot; id=&quot;<span class="mxmlString">chart_tries_ok</span>&quot; width=&quot;<span class="mxmlString">100%</span>&quot; height=&quot;<span class="mxmlString">100%</span>&quot;  showDataTips=&quot;<span class="mxmlString">true</span>&quot;<span class="mxmlComponent">&gt;</span>
+                <span class="mxmlComponent">&lt;mx:horizontalAxis&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:CategoryAxis</span> categoryField=&quot;<span class="mxmlString">date_of</span>&quot; labelFunction=&quot;<span class="mxmlString">funcShortDate</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:horizontalAxis&gt;</span>
+                <span class="mxmlComponent">&lt;mx:series&gt;</span>
+                    <span class="mxmlComponent">&lt;mx:ColumnSeries</span> displayName=&quot;<span class="mxmlString">Series 1</span>&quot; yField=&quot;<span class="mxmlString">qty</span>&quot; <span class="mxmlComponent">/&gt;</span>
+                <span class="mxmlComponent">&lt;/mx:series&gt;</span>
+            <span class="mxmlComponent">&lt;/mx:ColumnChart&gt;</span>
+        <span class="mxmlComponent">&lt;/mx:Canvas&gt;</span>
+    <span class="mxmlComponent">&lt;/mx:Accordion&gt;</span>
+
+<span class="mxmlComponent">&lt;/mx:Box&gt;</span></pre></body>
+</html>

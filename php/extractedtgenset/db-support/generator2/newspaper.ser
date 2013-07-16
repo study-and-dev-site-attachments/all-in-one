@@ -1,0 +1,1 @@
+a:2:{s:10:"table-name";s:9:"newspaper";s:6:"fields";a:4:{i:0;a:3:{s:4:"name";s:11:"NewspaperID";s:4:"type";s:3:"int";s:4:"size";i:11;}i:1;a:3:{s:4:"name";s:14:"NewspaperTitle";s:4:"type";s:6:"string";s:4:"size";i:100;}i:2;a:3:{s:4:"name";s:4:"Code";s:4:"type";s:6:"string";s:4:"size";i:20;}i:3;a:3:{s:4:"name";s:12:"DefaultPrice";s:4:"type";s:4:"real";s:4:"size";i:9;}}}

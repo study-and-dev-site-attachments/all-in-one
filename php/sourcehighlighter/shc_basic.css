@@ -1,0 +1,39 @@
+.css_whi_smp_error_not_found{
+  font-size: 14px;
+  font-family: Arial;
+  font-weight: bold;
+  color: red;
+  padding: 5px;
+  margin: 5px;
+  border: 2px solid black;
+}
+
+.css_whi_smp_heading_index_sourcesh{
+  font-size: 14px;
+  font-family: Arial;
+  font-weight: bold;
+  padding: 5px;
+  margin: 5px;
+  border: 2px solid black;
+}
+
+.css_whi_smp_table_scrlist_index{
+ font-size: 12px;
+ font-family: Arial;
+}
+
+.css_whi_smp_table_scrlist_index th{
+ font-weight: bold;
+ background-color: #cacaca;
+}
+
+.css_whi_smp_div_sourcebox{
+  font-size: 12px;
+  font-family: Arial;
+  
+  padding: 5px;
+  margin: 5px;
+  border: 2px solid black;  
+  
+  overflow: scroll;
+}
